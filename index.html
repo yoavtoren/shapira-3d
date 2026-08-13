@@ -63,8 +63,9 @@
   /* ---------- side panel ---------- */
   #panel{
     width:440px; flex:0 0 440px; background:var(--panel); border-inline-start:1px solid var(--line);
-    display:flex; flex-direction:column;
+    display:none; flex-direction:column;
   }
+  body.panel-open #panel{display:flex;}
   #tabs{display:flex; border-bottom:1px solid var(--line);}
   #tabs button{
     flex:1; background:none; border:none; color:var(--muted); font-size:13.5px; font-weight:600;
@@ -123,15 +124,30 @@
   #planBar button.on{background:var(--gold); color:#0f1420; border-color:var(--gold); font-weight:800;}
   #planBar #planClose{background:none; border:none; color:var(--muted); font-size:13px;}
   #planBar #planClose:hover{color:var(--accent);}
-  body.clean header, body.clean #hud, body.clean #panel, body.clean #footerNote{display:none;}
-  #hudToggle{display:none;}
+  body.clean header, body.clean #hud, body.clean #panel, body.clean #footerNote, body.clean #fabs{display:none;}
+  #cleanRestore{display:none; position:absolute; top:14px; inset-inline-end:14px; z-index:10;}
+  body.clean #cleanRestore{display:flex;}
+  /* HUD collapsed to the gear button by default; opens on demand */
+  #hud{bottom:52px; pointer-events:none;}
+  #hudToggle{
+    display:block; pointer-events:auto; align-self:flex-start;
+    background:rgba(23,30,46,.92); border:1px solid var(--line); color:var(--text);
+    border-radius:999px; padding:9px 15px; font-size:12.5px; font-weight:600; font-family:inherit;
+    cursor:pointer; backdrop-filter:blur(6px);
+    transition:border-color .15s, color .15s;
+  }
+  #hudToggle:hover, #hud.open #hudToggle{border-color:var(--accent); color:var(--accent);}
+  #hud .hudbox{display:none; pointer-events:auto;}
+  #hud.open{overflow-y:auto; overscroll-behavior:contain;}
+  #hud.open .hudbox{display:block;}
   @media (max-width:900px){
     header{min-height:0; padding:8px 12px; gap:10px;}
     header h1{font-size:14px; line-height:1.35; flex:1; min-width:0;}
     header .sub, header .badge, header .spacer{display:none;}
     .specbtn{padding:7px 12px; font-size:12px; flex:0 0 auto;}
     #app{flex-direction:column;}
-    #viewport{flex:0 0 auto; height:46vh; height:46svh;}
+    #viewport{flex:1; min-height:0;}
+    body.panel-open #viewport{flex:0 0 auto; height:46vh; height:46svh;}
     body.clean #viewport{flex:1; height:auto;}
     #panel{width:100%; flex:1 1 auto; min-height:0; border-inline-start:none; border-top:1px solid var(--line);}
     #tabs button{font-size:12.5px; padding:11px 4px;}
@@ -143,17 +159,9 @@
       padding:0 8px; pointer-events:none;
     }
     .fab{pointer-events:auto; padding:7px 11px; font-size:11.5px;}
-    /* HUD collapses to a gear button; open state scrolls within the 3D view */
-    #hud{top:8px; inset-inline-start:8px; bottom:52px; pointer-events:none;}
-    #hudToggle{
-      display:block; pointer-events:auto;
-      background:rgba(23,30,46,.92); border:1px solid var(--line); color:var(--text);
-      border-radius:999px; padding:8px 13px; font-size:12.5px; font-family:inherit; cursor:pointer;
-      backdrop-filter:blur(6px); align-self:flex-start;
-    }
-    #hud .hudbox{display:none; pointer-events:auto; max-width:236px; padding:10px 12px;}
-    #hud.open{overflow-y:auto; overscroll-behavior:contain;}
-    #hud.open .hudbox{display:block;}
+    #hud{top:8px; inset-inline-start:8px;}
+    #hudToggle{padding:8px 13px;}
+    #hud .hudbox{max-width:236px; padding:10px 12px;}
     #hud .slider input{width:100px; flex:1; min-width:0;}
     .lay{padding:5px 0;}
     #footerNote{display:none;}
@@ -166,6 +174,7 @@
   <span class="sub">גוש 6971 · מגרש 2056 · 246.76 מ״ר · חלקה 59</span>
   <span class="spacer"></span>
   <span class="badge">לפי דף זכויות 13/08/2026</span>
+  <a class="specbtn" href="report.html">📑 דוח זכויות מלא</a>
   <a class="specbtn" href="spec.html">📋 מפרט טכני מלא</a>
 </header>
 
@@ -173,12 +182,9 @@
   <div id="viewport">
     <div id="canvas3d"></div>
     <div id="fabs">
-      <a class="fab gold" href="report.html">📑 דוח זכויות ותכנון מלא</a>
-      <button class="fab" id="fabBefore">🕐 המגרש היום (לפני)</button>
-      <button class="fab" id="fabXray">🛋 תכנית חדרים</button>
-      <button class="fab" id="fabDims">📐 הצג מידות</button>
-      <button class="fab" id="fabClean">👁 מסך נקי</button>
+      <button class="fab" id="panelToggle">📊 דוח זכויות ונתונים</button>
     </div>
+    <button class="fab" id="cleanRestore">👁 החזר ממשק</button>
     <div id="planBar">
       <span class="pb-title">תכנית קומה:</span>
       <button data-lvl="basement2">מרתף −2</button>
@@ -190,6 +196,15 @@
     </div>
     <div id="hud">
       <button id="hudToggle">⚙ שכבות ותצוגה</button>
+      <div class="hudbox">
+        <h3>מצבי תצוגה</h3>
+        <div class="viewbtns">
+          <button id="fabBefore">🕐 המגרש היום (לפני)</button>
+          <button id="fabXray">🛋 תכניות קומה וחדרים</button>
+          <button id="fabDims">📐 הצג מידות</button>
+          <button id="fabClean">👁 מסך נקי</button>
+        </div>
+      </div>
       <div class="hudbox">
         <h3>שכבות</h3>
         <label class="lay"><input type="checkbox" data-layer="basement2" checked><span class="sw" style="background:#5c6b85"></span>מרתף −2 (חניה)</label>
@@ -1907,6 +1922,17 @@ document.getElementById('fabClean').addEventListener('click', function(){
 document.getElementById('hudToggle').addEventListener('click', ()=>{
   document.getElementById('hud').classList.toggle('open');
 });
+document.getElementById('panelToggle').addEventListener('click', function(){
+  document.body.classList.toggle('panel-open');
+  this.classList.toggle('on', document.body.classList.contains('panel-open'));
+  resize();
+});
+document.getElementById('cleanRestore').addEventListener('click', ()=>
+  document.getElementById('fabClean').click());
+/* the hint fades out once the viewer has had time to read it */
+const fNote = document.getElementById('footerNote');
+fNote.style.transition = 'opacity 1.2s';
+setTimeout(()=>{ fNote.style.opacity = '0'; setTimeout(()=> fNote.style.display = 'none', 1300); }, 10000);
 
 /* ================= day / night simulation (sunset at 20:00) ================= */
 const todSlider = document.getElementById('tod');
