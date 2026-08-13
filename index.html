@@ -53,6 +53,7 @@
     padding:6px 10px; font-size:12px; cursor:pointer;
   }
   .viewbtns button:hover{border-color:var(--accent); color:var(--accent);}
+  .viewbtns button.on{border-color:var(--accent); color:var(--accent);}
   .slider{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
   .slider input{width:130px; accent-color:var(--accent);}
   #footerNote{
@@ -158,6 +159,7 @@
     <div id="fabs">
       <a class="fab gold" href="report.html">📑 דוח זכויות ותכנון מלא</a>
       <button class="fab" id="fabBefore">🕐 המגרש היום (לפני)</button>
+      <button class="fab" id="fabXray">🛋 תכנית חדרים</button>
       <button class="fab" id="fabDims">📐 הצג מידות</button>
       <button class="fab" id="fabClean">👁 מסך נקי</button>
     </div>
@@ -199,6 +201,14 @@
           <button id="todSunset">🌇 שקיעה 20:00</button>
           <button id="todNight">🌙 לילה</button>
           <button id="todPlay">▶︎ יממה</button>
+        </div>
+      </div>
+      <div class="hudbox">
+        <h3>סימולציות חיות</h3>
+        <div class="viewbtns">
+          <button id="simCarBtn">🚗 רכב נכנס לחניון</button>
+          <button id="simWalkBtn">🚶 דייר נכנס לבניין</button>
+          <button id="xrayBtn">🛋 תכנית חדרים</button>
         </div>
       </div>
     </div>
@@ -403,11 +413,18 @@ function label(text, x,y,z, size=2.2, color='#e8edf7'){
   s.position.set(x,y,z);
   return s;
 }
-function flatPoly(pts, colorOrMat, y=0, opacity=1){
+function flatPoly(pts, colorOrMat, y=0, opacity=1, holePts=null){
   const shape = new THREE.Shape();
   shape.moveTo(pts[0][0], -pts[0][1]);
   for(let i=1;i<pts.length;i++) shape.lineTo(pts[i][0], -pts[i][1]);
   shape.closePath();
+  if(holePts){
+    const h = new THREE.Path();
+    h.moveTo(holePts[0][0], -holePts[0][1]);
+    for(let i=1;i<holePts.length;i++) h.lineTo(holePts[i][0], -holePts[i][1]);
+    h.closePath();
+    shape.holes.push(h);
+  }
   const geo = new THREE.ShapeGeometry(shape);
   geo.rotateX(-Math.PI/2);
   const mat = (colorOrMat && colorOrMat.isMaterial) ? colorOrMat :
@@ -460,14 +477,16 @@ function makeWindow(w, h, opts={}){
   if(!opts.noSill){ const sill = box(w+.24, .06, .14, BAND); sill.position.set(0, -h/2-.06, .05); g.add(sill); }
   return g;
 }
-/* entry door 1.10 x 2.10 with frame and handle; local outward = +z */
+/* entry door 1.10 x 2.10 with frame and handle; the leaf swings on a hinge group */
 function makeDoor(w=1.1, h=2.1, color=WOOD){
   const g = new THREE.Group();
   const frame = box(w+.16, h+.10, .12, 0x8b857a); frame.position.y = .0; g.add(frame);
-  const door = box(w, h, .07, color, 1, .55); door.position.z = .03; g.add(door);
+  const leaf = new THREE.Group(); leaf.position.set(-w/2, 0, .03);
+  const door = box(w, h, .07, color, 1, .55); door.position.x = w/2; leaf.add(door);
   const handle = new THREE.Mesh(new THREE.SphereGeometry(.045, 10, 8),
     new THREE.MeshStandardMaterial({color:0xc8c2b4, metalness:.6, roughness:.3}));
-  handle.position.set(w/2-.13, -.05, .09); g.add(handle);
+  handle.position.set(w-.13, -.05, .06); leaf.add(handle);
+  g.add(leaf); g.userData.leaf = leaf;
   return g;
 }
 /* place an opening group on a facade: face 'front'|'rear'|'east'|'west' */
@@ -592,7 +611,9 @@ const matSand    = new THREE.MeshStandardMaterial({map:texSand, roughness:1});
 const matPavers  = new THREE.MeshStandardMaterial({map:texPavers, roughness:.9});
 
 /* ================= street & ground ================= */
-gContext.add(flatPoly([[-45,-25],[45,-25],[45,40],[-45,40]], 0xd8cdb4, -0.12));
+/* base plane gets a hole under the plot, so the garage shows when the lawn fades */
+const PLOT_HOLE = [[-PLOT_W/2,0],[PLOT_W/2,0],[PLOT_W/2,PLOT_D],[-PLOT_W/2,PLOT_D]].map(p=>L2W(p[0],p[1]));
+gContext.add(flatPoly([[-45,-25],[45,-25],[45,40],[-45,40]], 0xd8cdb4, -0.12, 1, PLOT_HOLE));
 gContext.add(flatPoly(ribbonPoly(STREET_PTS, 0, 1.9),  matPavers, 0.06));   /* near sidewalk */
 gContext.add(flatPoly(ribbonPoly(STREET_PTS, 1.9, 8.6), matAsphalt, 0.0));  /* roadway */
 gContext.add(flatPoly(ribbonPoly(STREET_PTS, 8.6, 10.4), matPavers, 0.06)); /* far sidewalk */
@@ -616,19 +637,38 @@ const PLOT_LOCAL = [[-PLOT_W/2,0],[PLOT_W/2,0],[PLOT_W/2,PLOT_D],[-PLOT_W/2,PLOT
 const lawnMesh = flatPoly(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), 0x74915c, 0.04);
 gContext.add(lawnMesh);
 
-/* ---------- front garden: fence, gate, path, hedge (in plot local coords) ---------- */
+/* ---------- front garden: fence, gates, path, hedge (in plot local coords) ---------- */
 const gardenG = new THREE.Group();
+let vGate, pedGateH;   /* animated by the entry simulations */
 (function(){
   const garden = gardenG;
   garden.position.set(T.x,0,T.z); garden.rotation.y = ALPHA;
   /* low masonry fence along the frontage with a gate opening at the path */
   const fenceL = box(7.0, 1.15, .16, PLASTER2); fenceL.position.set(-2.85, .575, .08); garden.add(edges(fenceL));
-  const fenceR = box(2.6, 1.15, .16, PLASTER2); fenceR.position.set(5.05, .575, .08); garden.add(edges(fenceR));
-  const gate = box(1.35, 1.1, .05, FRAME, 1, .45); gate.position.set(2.0, .58, .08); garden.add(gate);
-  /* mailbox cluster beside the gate, like the one at the lot today */
-  const mail = new THREE.Mesh(new THREE.BoxGeometry(.8,.62,.08),
+  /* pedestrian gate on a hinge */
+  pedGateH = new THREE.Group(); pedGateH.position.set(1.325, .58, .08); garden.add(pedGateH);
+  const gate = box(1.35, 1.1, .05, FRAME, 1, .45); gate.position.set(.675, 0, 0); pedGateH.add(gate);
+  /* driveway to the basement ramp: pillar + sliding vehicle gate */
+  const pillar = box(.26, 1.3, .24, PLASTER2); pillar.position.set(3.42, .65, .08); garden.add(edges(pillar));
+  vGate = new THREE.Group(); vGate.position.set(4.95, 0, .1); garden.add(vGate);
+  for(let i=0;i<9;i++){
+    const slat = box(.06, 1.3, .06, FRAME, 1, .45); slat.castShadow = false;
+    slat.position.set(-1.28 + i*.32, .72, 0); vGate.add(slat);
+  }
+  [.14, 1.3].forEach(y=>{
+    const r = box(2.86, .07, .06, FRAME, 1, .45); r.position.set(0, y, 0); vGate.add(r);
+  });
+  const drive = box(2.9, .05, 1.0, 0xb9b5ac); drive.position.set(4.9, .028, .5); garden.add(drive);
+  /* bicycle hoops by the entrance (policy 9010) */
+  [-0.2, 0.35].forEach(x=>{
+    const hoop = new THREE.Mesh(new THREE.TorusGeometry(.3, .035, 8, 14, Math.PI),
+      new THREE.MeshStandardMaterial({color:0x757a80, roughness:.5, metalness:.4}));
+    hoop.position.set(x, .32, .55); garden.add(hoop);
+  });
+  /* mailbox panel mounted on the driveway pillar */
+  const mail = new THREE.Mesh(new THREE.BoxGeometry(.56,.5,.07),
     new THREE.MeshStandardMaterial({map:texMail, roughness:.55, metalness:.25}));
-  mail.position.set(3.25, .78, .05); garden.add(mail);
+  mail.position.set(3.42, .82, .17); garden.add(mail);
   /* paved entry path from the gate to the door */
   const path = box(1.5, .06, 3.1, TILE); path.position.set(2.3, .03, 1.55); garden.add(path);
   /* hedge inside the fence */
@@ -643,6 +683,17 @@ const gardenG = new THREE.Group();
 
 /* ================= THE BUILDING — real proportions ================= */
 
+/* x-ray registry: exterior shells fade in "room plan" mode */
+const xrayMeshes = [], roomSprites = [];
+function xreg(...meshes){
+  meshes.forEach(m=>{
+    const mats = Array.isArray(m.material) ? m.material : [m.material];
+    mats.forEach(mt=>{ mt.userData.o0 = mt.opacity; mt.userData.t0 = mt.transparent; });
+    xrayMeshes.push(m);
+  });
+}
+let mainDoorLeaf = null;   /* animated by the entry simulation */
+
 /* ---------- ground floor (unit A) ---------- */
 (function(){
   /* plinth + walls */
@@ -650,8 +701,13 @@ const gardenG = new THREE.Group();
   const walls = box(BW, GF1-GF0, BD, PLASTER); walls.position.set(B_CX, (GF0+GF1)/2, B_CZ); gGround.add(edges(walls));
   /* slab band above GF */
   const slab = box(BW+.2, S1-GF1, BD+.2, BAND); slab.position.set(B_CX, (GF1+S1)/2, B_CZ); gGround.add(edges(slab));
+  xreg(plinth, walls, slab);
   /* entrance: door 1.10x2.10 + step + canopy */
-  gGround.add(placeOn(makeDoor(), 'front', 2.55, GF0+1.05, B_FRONT-.02));
+  const entryDoor = makeDoor();
+  mainDoorLeaf = entryDoor.userData.leaf;
+  gGround.add(placeOn(entryDoor, 'front', 2.55, GF0+1.05, B_FRONT-.02));
+  /* separate entrance to unit B's stair core, on the south wall */
+  gGround.add(placeOn(makeDoor(1.0,2.05,0x50565e), 'east', BW/2+.04, GF0+1.03, 11.1));
   const step = box(1.5, .15, .45, TILE); step.position.set(2.55, .075, B_FRONT-.28); gGround.add(step);
   const canopy = box(1.9, .1, 1.15, BAND); canopy.position.set(2.55, 2.62, B_FRONT-.55); gGround.add(edges(canopy));
   const rod1 = box(.05,.05,1.1,FRAME); rod1.position.set(1.75, 2.9, B_FRONT-.5); rod1.rotation.x=.45; gGround.add(rod1);
@@ -673,6 +729,7 @@ const gardenG = new THREE.Group();
 (function(){
   const walls = box(BW, F1TOP-S1, BD, PLASTER); walls.position.set(B_CX, (S1+F1TOP)/2, B_CZ); gF1.add(edges(walls));
   const slab = box(BW+.2, RS-F1TOP, BD+.2, BAND); slab.position.set(B_CX, (F1TOP+RS)/2, B_CZ); gF1.add(edges(slab));
+  xreg(walls, slab);
   /* front balcony: 3.4 x 1.5 slab + glass railing 1.05 + sliding door 2.00x2.10 */
   const bSlab = box(3.4, .18, 1.5, BAND); bSlab.position.set(.8, S1-.09, B_FRONT-.75); gF1.add(edges(bSlab));
   const rF = box(3.34, 1.0, .04, GLASS, .45, .2); rF.position.set(.8, S1+.5, B_FRONT-1.48); gF1.add(rF);
@@ -738,6 +795,7 @@ const gardenG = new THREE.Group();
   gRoof.add(tank);
   const panel = box(1.7,.07,2.1,0x27415f,1,.3);
   panel.rotation.x = -.5; panel.position.set(-.6, RR_TOP+.62, RR_CZ+1.2); gRoof.add(edges(panel));
+  xreg(terr, pF, pR, pE, pW, rr, rrRoof);
 })();
 
 /* ---------- basements (~197 m^2 each) with parked cars ---------- */
@@ -765,6 +823,194 @@ const ramp = new THREE.Mesh(new THREE.BoxGeometry(2.8, .22, 7),
 ramp.rotation.x = Math.atan2(BASE_H+.2, 6.5);
 ramp.position.set(4.6, -BASE_H/2+.45, 3.9);
 gB1.add(ramp);
+
+/* ================= interiors: rooms, cores, furniture, foundations =================
+   Program (matches the rights report): stacked MAMADs, stacked wet rooms,
+   common stair core + prepared lift shaft, duplex stairs, raft + piles. */
+function part(g, x0, z0, x1, z1, y0, y1, th=.1, color=0xf7f4ec){
+  const len = Math.hypot(x1-x0, z1-z0);
+  const w = box(th, y1-y0, len, color, 1, .85);
+  w.castShadow = false;
+  w.position.set((x0+x1)/2, (y0+y1)/2, (z0+z1)/2);
+  w.rotation.y = Math.atan2(x1-x0, z1-z0);
+  g.add(w);
+  return w;
+}
+function furn(g, x, y, z, w, h, d, color, ry=0){
+  const f = box(w, h, d, color, 1, .8); f.castShadow = false;
+  f.position.set(x, y + h/2, z); f.rotation.y = ry; g.add(f);
+  return f;
+}
+function stairsRun(g, x, z0, w, n, rise, run, y0){
+  for(let i=0;i<n;i++){
+    const st = box(w, Math.abs(rise), run, 0xd9d3c6, 1, .85); st.castShadow = false;
+    st.position.set(x, y0 + rise*(i+.5), z0 + run*(i+.5));
+    g.add(st);
+  }
+}
+function rlabel(g, x, y, z, text, size=1.0, color='#ffe9b0'){
+  const s = label(text, x, y, z, size, color);
+  s.visible = false; g.add(s); roomSprites.push(s);
+  return s;
+}
+function shaftSeg(g, y0, y1){
+  const s = box(1.05, y1-y0, 1.05, 0x9fc6e8, .28, .4); s.castShadow = false;
+  s.position.set(3.5, (y0+y1)/2, 12.0); g.add(edges(s));
+}
+function stallMark(g, x, z, y){
+  [[x-1.25, z, .06, 5.0],[x+1.25, z, .06, 5.0],[x, z+2.5, 2.56, .06]].forEach(([mx,mz,w,d])=>{
+    const m = box(w, .02, d, 0xf2f3ee, 1, .9); m.castShadow = false;
+    m.position.set(mx, y+.012, mz); g.add(m);
+  });
+}
+const MAMAD_C = 0xcdd2d8;   /* reinforced-concrete grey */
+
+/* ---------- ground floor: unit A entry level ---------- */
+(function(){
+  const g = gGround, f = GF0, c = GF1;
+  /* rear service band */
+  part(g,-4.1,9.6,-1.1,9.6,f,c,.25,MAMAD_C);       /* mamad front wall */
+  part(g,-1.1,9.6,-1.1,12.6,f,c,.25,MAMAD_C);      /* mamad side wall */
+  part(g,-0.98,9.6,0.1,9.6,f,c,.12);
+  part(g,0.1,9.6,0.1,12.6,f,c,.1);                 /* A-stair / WC divider */
+  part(g,1.9,9.6,1.9,12.6,f,c,.1);                 /* core wall */
+  part(g,2.7,9.6,4.1,9.6,f,c,.12);
+  part(g,0.1,11.1,1.9,11.1,f,c,.1);                /* guest WC */
+  /* unit A internal stair down to basement −1 */
+  stairsRun(g,-0.5,9.8,1.0,11,-.29,.25,f);
+  /* common core: stair up + prepared lift shaft */
+  stairsRun(g,2.45,9.75,.95,12,.27,.23,f);
+  shaftSeg(g,f,c);
+  /* kitchen along the west wall + island */
+  furn(g,-3.68,f,5.5,.62,.9,3.0,0xdfe3e6);
+  furn(g,-3.68,f,7.4,.65,1.85,.65,0xd7dade);       /* fridge */
+  furn(g,-2.35,f,5.5,1.5,.9,.7,0xe9e4d8);          /* island */
+  /* living + dining */
+  furn(g,2.25,f,6.2,.85,.62,2.2,0x8fa3b8);
+  furn(g,1.35,f,5.45,1.5,.62,.8,0x8fa3b8);
+  furn(g,1.2,f,6.5,.8,.34,.8,0xb9a98e);
+  furn(g,-0.9,f,8.35,1.5,.72,.85,0x9a7b52);
+  [[-1.55,7.8],[-0.25,7.8],[-1.55,8.9],[-0.25,8.9]].forEach(([cx,cz])=> furn(g,cx,f,cz,.38,.45,.38,0x7c6242));
+  furn(g,-0.4,f,3.4,1.6,.45,.32,0x4a4f57);         /* tv console */
+  /* mamad as study, guest WC fixtures */
+  furn(g,-2.5,f,11.9,1.6,.55,.9,0xb7c3d3);
+  furn(g,-3.7,f,10.5,.55,.72,1.3,0xc9b58e);
+  furn(g,1.45,f,10.55,.4,.42,.55,0xf4f6f7);
+  furn(g,0.5,f,10.7,.45,.8,.35,0xe8ebee);
+  /* labels */
+  rlabel(g,-0.9,f+1.9,6.0,'סלון · פינת אוכל · מטבח ~31 מ״ר',1.2,'#9fe3d1');
+  rlabel(g,-2.6,f+1.8,11.1,'ממ״ד 9 מ״ר (חדר עבודה)',1.0,'#ffc9c9');
+  rlabel(g,1.0,f+1.55,10.4,'שירותי אורחים',0.85);
+  rlabel(g,-0.5,f+1.85,11.5,'מדרגות פנימיות ↓ למרתף',0.9,'#9fd3f5');
+  rlabel(g,3.0,f+2.1,11.0,'גרעין משותף + פיר מעלית (הכנה)',0.95,'#c5cff0');
+})();
+
+/* ---------- first floor: unit B entry level ---------- */
+(function(){
+  const g = gF1, f = S1, c = F1TOP;
+  part(g,-4.1,9.6,-1.1,9.6,f,c,.25,MAMAD_C);       /* mamad stacked above A's */
+  part(g,-1.1,9.6,-1.1,12.6,f,c,.25,MAMAD_C);
+  part(g,-0.98,9.6,0.1,9.6,f,c,.12);
+  part(g,0.1,9.6,0.1,12.6,f,c,.1);
+  part(g,1.9,9.6,1.9,12.6,f,c,.1);
+  part(g,2.7,9.6,4.1,9.6,f,c,.12);
+  part(g,0.1,11.1,1.9,11.1,f,c,.1);                /* bath, stacked over the WC */
+  /* bedroom, front-west */
+  part(g,-1.3,3.0,-1.3,6.4,f,c,.1);
+  part(g,-4.1,6.4,-1.3,6.4,f,c,.1);
+  /* unit B internal stair up to the roof storey */
+  stairsRun(g,-0.5,9.75,1.0,12,.27,.23,f);
+  shaftSeg(g,f,c);
+  /* furniture */
+  furn(g,-2.7,f,4.75,1.65,.55,2.0,0xf0f0f2);
+  furn(g,-2.7,f,3.62,1.75,.9,.14,0xb98f6a);
+  [[-3.62,3.85],[-1.8,3.85]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
+  furn(g,-3.78,f,5.7,.55,1.95,1.2,0xd9d4c8);       /* wardrobe */
+  furn(g,2.3,f,7.4,.85,.62,2.1,0xc0876a);
+  furn(g,1.0,f,8.5,1.4,.72,.8,0x9a7b52);
+  furn(g,0.55,f,9.25,2.6,.9,.6,0xdfe3e6);          /* kitchen run */
+  furn(g,1.45,f,10.55,.4,.42,.55,0xf4f6f7);
+  furn(g,0.5,f,10.7,.45,.8,.35,0xe8ebee);
+  furn(g,-2.5,f,11.9,1.5,.55,.95,0xf0f0f2);        /* mamad as bedroom */
+  /* labels */
+  rlabel(g,1.0,f+1.9,6.4,'סלון · מטבח ~29 מ״ר',1.15,'#a9c2f5');
+  rlabel(g,-2.7,f+1.8,4.8,'חדר שינה 11 מ״ר',0.95,'#a9c2f5');
+  rlabel(g,-2.6,f+1.8,11.1,'ממ״ד — חדר שינה 9 מ״ר',0.95,'#ffc9c9');
+  rlabel(g,1.0,f+1.55,10.4,'רחצה + שירותים',0.85);
+  rlabel(g,-0.5,f+1.85,11.5,'מדרגות ↑ לקומת הגג',0.9,'#9fd3f5');
+})();
+
+/* ---------- roof storey: parents' suite ---------- */
+(function(){
+  const g = gRoof, f = RS;
+  part(g,-1.2,6.1,-1.2,8.1,f,f+2.5,.1);
+  part(g,-4.05,8.1,-1.2,8.1,f,f+2.5,.1);
+  furn(g,-2.45,f,10.6,1.8,.55,2.05,0xf0eef2);
+  furn(g,-2.45,f,9.55,1.9,.9,.14,0xb98f6a);
+  furn(g,-3.3,f,6.9,.75,.55,1.5,0xf6f8f9);         /* freestanding tub */
+  furn(g,-1.75,f,7.6,.45,.8,.35,0xe8ebee);
+  furn(g,1.0,f,10.6,.5,1.9,1.1,0xd9d4c8);
+  /* railing around the stair opening */
+  part(g,0.1,9.6,0.1,12.5,f,f+1.0,.05,0x6b7280);
+  part(g,-1.1,9.6,0.1,9.6,f,f+1.0,.05,0x6b7280);
+  rlabel(g,-2.3,f+1.9,10.5,'סוויטת הורים 16 מ״ר',1.0,'#e2c2f7');
+  rlabel(g,-2.6,f+1.6,7.1,'רחצת הורים',0.85,'#e2c2f7');
+  rlabel(g,2.6,f+1.5,5.2,'מרפסת גג ~40 מ״ר + פרגולה',0.95,'#ffe9b0');
+})();
+
+/* ---------- basement −1: parking, storage, unit A bedrooms ---------- */
+(function(){
+  const g = gB1, f = -3.2, c = -0.4;
+  [[-3,5.2],[3,5.2],[-3,12],[3,12]].forEach(([x,z])=> stallMark(g,x,z-2.5,f));
+  part(g,-5.5,13.5,5.5,13.5,f,c,.12);              /* dwelling part of unit A */
+  part(g,-1.4,13.5,-1.4,18.7,f,c,.1);
+  part(g,2.1,13.5,2.1,18.7,f,c,.1);
+  part(g,-3.6,8.5,-3.6,11.7,f,c,.1);               /* two 9m² storerooms */
+  part(g,-5.5,8.5,-3.6,8.5,f,c,.1);
+  part(g,-5.5,11.7,-3.6,11.7,f,c,.1);
+  part(g,-5.5,10.1,-3.6,10.1,f,c,.08);
+  shaftSeg(g,f,GF0);
+  stairsRun(g,2.45,9.75,.95,11,.28,.24,f);         /* core reaches the parking level */
+  /* unit A rooms */
+  furn(g,-3.6,f,16.2,1.65,.55,2.0,0xf0f0f2);
+  furn(g,3.8,f,16.2,1.4,.55,1.9,0xf0f0f2);
+  furn(g,0.3,f,16.5,.85,.6,2.0,0x8fa3b8);
+  furn(g,-5.15,f,6.8,.14,.5,.4,0x3fae6a);          /* EV charger */
+  /* english courts bring light to the bedrooms (grates on the lawn above) */
+  rlabel(g,0,f+1.6,7.8,'חניה · 4 מקומות + עמדת טעינה',1.05,'#b7c5df');
+  rlabel(g,-4.55,f+1.5,10.1,'2 מחסנים · 9 מ״ר ליח״ד',0.9,'#b7c5df');
+  rlabel(g,0.3,f+1.7,16.3,'דירה A: 2 ח. שינה + משפחה + רחצה',1.0,'#7fe7d2');
+  rlabel(g,-4.9,f+1.4,16.8,'חצר אנגלית ← אור טבעי',0.8,'#9fd3f5');
+})();
+
+/* ---------- basement −2: parking, tech, foundations ---------- */
+(function(){
+  const g = gB2, f = -6.4, c = -3.6;
+  [[-3,7],[3,7],[-3,10.5],[3,10.5]].forEach(([x,z])=> stallMark(g,x,z-2.5,f));
+  part(g,-5.5,15,5.5,15,f,c,.12);
+  const wt = new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,1.6,16),
+    new THREE.MeshStandardMaterial({color:0x9fb6c4, roughness:.5}));
+  wt.position.set(-3, f+.8, 16.8); g.add(wt);
+  furn(g,1.5,f,16.5,1.2,1.1,.8,0x8a9096);          /* pumps */
+  furn(g,3.6,f,16.5,.9,1.6,.6,0x767c83);           /* electrical panel */
+  rlabel(g,0,f+1.7,8.5,'חניה · 4 מקומות',1.0,'#9fb0cc');
+  rlabel(g,0,f+1.7,16.6,'טכני: מאגר מים + משאבות נגר (תמ״א 1)',0.95,'#9fb0cc');
+  /* foundations: raft + piles (sand + high water table) */
+  const raft = box(11.6,.45,18.5, 0x9ba2ab, .55); raft.castShadow = false;
+  raft.position.set(0, -6.65, 9.75); g.add(edges(raft));
+  [[-4,2.8],[4,2.8],[-4,7.5],[4,7.5],[-4,12],[4,12],[-4,16.5],[4,16.5]].forEach(([x,z])=>{
+    const pile = new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,2.4,10),
+      new THREE.MeshStandardMaterial({color:0x8d949d, roughness:.9, transparent:true, opacity:.55}));
+    pile.position.set(x, -8.1, z); g.add(pile);
+  });
+  rlabel(g,0,-7.9,9.5,'רפסודת בטון + כלונסאות ביסוס',0.95,'#93a0b8');
+})();
+
+/* english-court grates on the lawn, west side */
+[[14.9],[17.6]].forEach(([z])=>{
+  const gr = box(.85,.05,1.5, 0x3c4046, 1, .6); gr.castShadow = false;
+  gr.position.set(-5.95, .09, z); gardenG.add(gr);
+});
 
 /* ================= context: the real street (matched to Street View) ================= */
 /* local-frame group sharing the plot rotation */
@@ -957,7 +1203,7 @@ tp = L2W(13, PLOT_D+5); tree(tp[0], tp[1], 1.2);
   const p = alongStreet(t);
   tree(p.x+Math.cos(p.ang)*off, p.z-Math.sin(p.ang)*off, s);
 });
-[[.70,1.0,1.05],[.84,1.0,.95]].forEach(([t,off,s])=>{
+[[.77,1.0,1.05],[.89,1.0,.95]].forEach(([t,off,s])=>{
   const p = alongStreet(t);
   const x = p.x+Math.cos(p.ang)*off, z = p.z-Math.sin(p.ang)*off;
   const pit = box(1.0,.04,1.0, 0x9a8a6c); pit.position.set(x,.085,z); pit.rotation.y = p.ang; gContext.add(pit);
@@ -1174,10 +1420,29 @@ document.getElementById('explode').addEventListener('input', e=>{
   explodeTargets.forEach(t=> t.g.position.y = t.factor * v);
 });
 
-/* ================= before/after + layer logic ================= */
+/* ================= x-ray "room plan" mode ================= */
 let beforeMode = false;
+let xrayOn = false;
+function setXray(on){
+  xrayOn = on;
+  xrayMeshes.forEach(m=>{
+    const mats = Array.isArray(m.material) ? m.material : [m.material];
+    mats.forEach(mt=>{
+      if(on){ mt.transparent = true; mt.opacity = .15; mt.depthWrite = false; }
+      else { mt.opacity = mt.userData.o0; mt.transparent = mt.userData.t0; mt.depthWrite = true; }
+    });
+  });
+  roomSprites.forEach(s=> s.visible = on && !beforeMode);
+  document.getElementById('xrayBtn').classList.toggle('on', on);
+  const fx = document.getElementById('fabXray');
+  fx.classList.toggle('on', on);
+  fx.textContent = on ? '🛋 סגור תכנית חדרים' : '🛋 תכנית חדרים';
+}
+
+/* ================= before/after + layer logic ================= */
 const HIDE_IN_BEFORE = ['basement2','basement1','ground','floor1','roof','lines','dims','labels'];
 function applyMode(){
+  if(beforeMode && xrayOn) setXray(false);
   document.querySelectorAll('[data-layer]').forEach(cb=>{
     const name = cb.dataset.layer;
     layers[name].visible = cb.checked && !(beforeMode && HIDE_IN_BEFORE.includes(name));
@@ -1203,6 +1468,12 @@ document.getElementById('fabBefore').addEventListener('click', function(){
   this.classList.toggle('on', beforeMode);
   this.textContent = beforeMode ? '🏗 הצג את הבניין המוצע (אחרי)' : '🕐 המגרש היום (לפני)';
   applyMode();
+});
+[document.getElementById('fabXray'), document.getElementById('xrayBtn')].forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if(beforeMode) document.getElementById('fabBefore').click();
+    setXray(!xrayOn);
+  });
 });
 document.getElementById('fabClean').addEventListener('click', function(){
   document.body.classList.toggle('clean');
@@ -1280,6 +1551,128 @@ document.querySelectorAll('[data-view]').forEach(b=>{
 });
 setView('iso');
 
+/* ================= live entry simulations ================= */
+function lpw(x, y, z){ const w = L2W(x, z); return [w[0], y, w[1]]; }
+function spw(t, off, y=0){ const p = alongStreet(t); return [p.x+Math.cos(p.ang)*off, y, p.z-Math.sin(p.ang)*off]; }
+function makePath(pts){
+  const segs = [], wp = [0]; let L = 0;
+  for(let i=0;i<pts.length-1;i++){
+    const a = pts[i], b = pts[i+1];
+    const l = Math.hypot(b[0]-a[0], b[1]-a[1], b[2]-a[2]);
+    segs.push({a, b, l, d0:L}); L += l; wp.push(L);
+  }
+  return { length:L, wp,
+    at(d){
+      d = Math.max(0, Math.min(L-1e-4, d));
+      let s = segs[segs.length-1];
+      for(const q of segs){ if(d <= q.d0+q.l){ s = q; break; } }
+      const f = (d-s.d0)/s.l;
+      return { x:s.a[0]+(s.b[0]-s.a[0])*f, y:s.a[1]+(s.b[1]-s.a[1])*f, z:s.a[2]+(s.b[2]-s.a[2])*f,
+               yaw:Math.atan2(s.b[0]-s.a[0], s.b[2]-s.a[2]) };
+    } };
+}
+function lerpAngle(a, b, f){
+  let d = b - a;
+  while(d > Math.PI) d -= 2*Math.PI;
+  while(d < -Math.PI) d += 2*Math.PI;
+  return a + d*f;
+}
+/* actors: a resident's car with headlights, and a walking figure */
+const simCar = carMesh(0x2b4f9e);
+[-.55, .55].forEach(x=>{
+  const h = box(.18, .1, .05, 0xfff3cd, 1, .3);
+  h.material.emissive = new THREE.Color(0xffedb0); h.material.emissiveIntensity = .8;
+  h.position.set(x, .62, -2.1); simCar.add(h);
+});
+simCar.visible = false; scene.add(simCar);
+function makePerson(){
+  const g = new THREE.Group();
+  const legs = box(.3, .72, .16, 0x2e3a4d, 1, .8); legs.position.y = .36; g.add(legs);
+  const body = box(.36, .6, .2, 0xc75b39, 1, .7); body.position.y = .98; g.add(body);
+  [-.24, .24].forEach(x=>{ const arm = box(.09, .5, .12, 0xc75b39, 1, .7); arm.position.set(x, .99, 0); g.add(arm); });
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.15, 10, 8),
+    new THREE.MeshStandardMaterial({color:0xe0b39a, roughness:.7}));
+  head.position.y = 1.44; head.castShadow = true; g.add(head);
+  return g;
+}
+const person = makePerson(); person.visible = false; scene.add(person);
+/* car: along the street → through the sliding gate → down the ramp → into stall */
+const carPath = makePath([
+  spw(.20, 5.2), spw(.34, 5.2), spw(.44, 5.2), spw(.50, 4.4), spw(.545, 3.1),
+  lpw(4.6, .05, -1.2), lpw(4.6, .05, .7),
+  lpw(4.6, -2.7, 7.3), lpw(4.6, -3.2, 9.9),
+  lpw(3.4, -3.2, 10.9), lpw(3.0, -3.2, 12.4),
+]);
+/* resident: along the sidewalk → through the garden gate → front door */
+const walkPath = makePath([
+  spw(.665, .95), spw(.60, .95),
+  lpw(2.0, 0, -.5), lpw(2.0, 0, .6), lpw(2.35, 0, 1.9),
+  lpw(2.55, 0, 2.55), lpw(2.55, .15, 3.7),
+]);
+let sim = null, vGateOpen = 0, pedOpen = 0, doorOpen = 0, simFade = 0;
+lawnMesh.material.transparent = true;
+function startSim(type){
+  if(beforeMode) document.getElementById('fabBefore').click();
+  document.getElementById('explode').value = 0;
+  explodeTargets.forEach(t=> t.g.position.y = 0);
+  simCar.visible = type === 'car';
+  person.visible = type === 'walk';
+  sim = {type, d:0, hold:0, ret:0};
+}
+document.getElementById('simCarBtn').addEventListener('click', ()=> startSim('car'));
+document.getElementById('simWalkBtn').addEventListener('click', ()=> startSim('walk'));
+function updateSim(dt){
+  if(sim){
+    const path = sim.type === 'car' ? carPath : walkPath;
+    const actor = sim.type === 'car' ? simCar : person;
+    if(sim.d < path.length){
+      const v = sim.type === 'car'
+        ? (sim.d < path.wp[4] ? 5.5 : (sim.d < path.wp[7] ? 2.4 : 1.7))
+        : 1.5;
+      sim.d += v*dt;
+      const p = path.at(sim.d);
+      actor.position.set(p.x, p.y, p.z);
+      actor.rotation.y = lerpAngle(actor.rotation.y, p.yaw, Math.min(1, dt*7));
+      if(sim.type === 'walk') actor.position.y = p.y + Math.abs(Math.sin(sim.d*7))*.05;
+    } else sim.hold += dt;
+    if(sim.type === 'walk' && sim.d > walkPath.length - .4) person.visible = false;
+    /* once the car dives underground, the whole building goes x-ray */
+    if(sim.type === 'car' && actor.position.y < -.4 && !xrayOn){ setXray(true); sim.xrayAuto = true; }
+    /* cinematic camera: track the actor, then glide back to the street view */
+    if(sim.hold < 1.6){
+      const off = sim.type === 'car'
+        ? (actor.position.y < -.4 ? [3.0, 7.8, -9.5] : [7.5, 5.5, -7.5])
+        : [4.2, 3.0, -4.6];
+      camera.position.lerp(new THREE.Vector3(
+        actor.position.x+off[0], Math.max(actor.position.y+off[1], 2.2), actor.position.z+off[2]),
+        Math.min(1, dt*2.2));
+      controls.target.lerp(new THREE.Vector3(actor.position.x, actor.position.y+1.1, actor.position.z),
+        Math.min(1, dt*3.5));
+    } else {
+      if(sim.xrayAuto){ setXray(false); sim.xrayAuto = false; }
+      camera.position.lerp(new THREE.Vector3(...views.street.pos), Math.min(1, dt*1.6));
+      controls.target.lerp(new THREE.Vector3(...views.street.tgt), Math.min(1, dt*1.6));
+      sim.ret += dt;
+      if(sim.ret > 2.6) sim = null;
+    }
+  }
+  /* gates, door and the see-through ground ease toward their targets */
+  const wantV = sim && sim.type === 'car' && sim.d > carPath.wp[5]-7 && sim.hold < .6;
+  const wantP = sim && sim.type === 'walk' && sim.d > walkPath.wp[2]-1.6 && sim.hold < .4;
+  const wantD = sim && sim.type === 'walk' && sim.d > walkPath.wp[5]-1.6 && sim.hold < .4;
+  const wantF = sim && sim.type === 'car' && sim.d > carPath.wp[6]-1.5 && sim.hold < 1.4;
+  vGateOpen += ((wantV?1:0) - vGateOpen)*Math.min(1, dt*2.4);
+  pedOpen  += ((wantP?1:0) - pedOpen)*Math.min(1, dt*3.2);
+  doorOpen += ((wantD?1:0) - doorOpen)*Math.min(1, dt*3.4);
+  simFade  += ((wantF?1:0) - simFade)*Math.min(1, dt*2.0);
+  vGate.position.x = 4.95 - vGateOpen*2.95;
+  pedGateH.rotation.y = -pedOpen*1.85;
+  if(mainDoorLeaf) mainDoorLeaf.rotation.y = doorOpen*1.9;
+  lawnMesh.material.opacity = 1 - simFade*.85;
+  b1.material.opacity = .42 - simFade*.3;
+  b2.material.opacity = .4 - simFade*.28;
+}
+
 /* ================= tabs ================= */
 document.querySelectorAll('#tabs button').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -1298,13 +1691,16 @@ function resize(){
 }
 window.addEventListener('resize', resize);
 resize();
+const clock = new THREE.Clock();
 (function animate(){
   requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .08);
   if(todPlaying){
     tod += 0.018;
     if(tod > 22) tod = 5.5;
     updateSky();
   }
+  updateSim(dt);
   controls.update();
   renderer.render(scene, camera);
 })();
