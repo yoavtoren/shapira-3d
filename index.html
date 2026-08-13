@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חובות הלבבות 10–12 · הדמיה תלת-ממדית</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#171e2e; --panel2:#1d2537; --line:#2a3550;
+    --text:#e8edf7; --muted:#93a0b8; --accent:#4fc3f7; --gold:#ffd166;
+    --unitA:#2ec4a6; --unitB:#5b8def; --roof:#c98bf0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system, "Segoe UI", "Heebo", Arial, sans-serif;
+    background:var(--bg); color:var(--text); overflow:hidden;
+  }
+  header{
+    height:58px; display:flex; align-items:center; gap:14px; padding:0 18px;
+    background:var(--panel); border-bottom:1px solid var(--line);
+  }
+  header h1{font-size:17px; font-weight:700;}
+  header .sub{font-size:12.5px; color:var(--muted);}
+  header .spacer{margin-inline-start:auto;}
+  .specbtn{
+    display:inline-block; font-size:13px; font-weight:700; color:#0f1420; background:var(--gold);
+    border-radius:10px; padding:8px 16px; text-decoration:none; white-space:nowrap;
+  }
+  .specbtn:hover{filter:brightness(1.08);}
+  header .badge{
+    font-size:12px; color:var(--gold);
+    border:1px solid var(--gold); border-radius:999px; padding:4px 12px; white-space:nowrap;
+  }
+  #app{display:flex; height:calc(100% - 58px);}
+  #viewport{flex:1; position:relative; min-width:0;}
+  #canvas3d{position:absolute; inset:0;}
+  #hud{
+    position:absolute; top:14px; inset-inline-start:14px; display:flex; flex-direction:column; gap:8px; z-index:5;
+  }
+  .hudbox{
+    background:rgba(23,30,46,.92); border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    backdrop-filter:blur(6px); max-width:250px;
+  }
+  .hudbox h3{font-size:12.5px; color:var(--accent); margin-bottom:8px; letter-spacing:.3px;}
+  .lay{display:flex; align-items:center; gap:8px; font-size:13px; padding:3px 0; cursor:pointer; user-select:none;}
+  .lay input{accent-color:var(--accent); width:15px; height:15px; cursor:pointer;}
+  .sw{width:12px; height:12px; border-radius:3px; display:inline-block; flex:0 0 auto;}
+  .viewbtns{display:flex; gap:6px; flex-wrap:wrap;}
+  .viewbtns button{
+    background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:8px;
+    padding:6px 10px; font-size:12px; cursor:pointer;
+  }
+  .viewbtns button:hover{border-color:var(--accent); color:var(--accent);}
+  .slider{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);}
+  .slider input{width:130px; accent-color:var(--accent);}
+  #footerNote{
+    position:absolute; bottom:10px; inset-inline-start:14px; font-size:11.5px; color:var(--muted);
+    background:rgba(15,20,32,.7); padding:5px 10px; border-radius:8px; z-index:5;
+  }
+  /* ---------- side panel ---------- */
+  #panel{
+    width:440px; flex:0 0 440px; background:var(--panel); border-inline-start:1px solid var(--line);
+    display:flex; flex-direction:column;
+  }
+  #tabs{display:flex; border-bottom:1px solid var(--line);}
+  #tabs button{
+    flex:1; background:none; border:none; color:var(--muted); font-size:13.5px; font-weight:600;
+    padding:13px 6px; cursor:pointer; border-bottom:2px solid transparent; font-family:inherit;
+  }
+  #tabs button.active{color:var(--accent); border-bottom-color:var(--accent);}
+  #tabContent{flex:1; overflow-y:auto; padding:18px 20px 40px;}
+  .tabpage{display:none;}
+  .tabpage.show{display:block;}
+  .tabpage h2{font-size:15px; color:var(--gold); margin:18px 0 8px;}
+  .tabpage h2:first-child{margin-top:0;}
+  .tabpage p, .tabpage li{font-size:13.5px; line-height:1.65; color:var(--text);}
+  .tabpage ul{padding-inline-start:18px; margin:6px 0;}
+  .tabpage .note{font-size:12px; color:var(--muted); line-height:1.55;}
+  table{width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:12.8px;}
+  th,td{border:1px solid var(--line); padding:7px 9px; text-align:right; vertical-align:top;}
+  th{background:var(--panel2); color:var(--accent); font-weight:700;}
+  td b{color:var(--gold);}
+  .kpis{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:6px 0 14px;}
+  .kpi{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px;}
+  .kpi .v{font-size:20px; font-weight:800; color:var(--accent);}
+  .kpi .l{font-size:11.5px; color:var(--muted); margin-top:3px;}
+  .pill{display:inline-block; font-size:11px; border-radius:999px; padding:2px 10px; margin-inline-end:6px;}
+  .pA{background:rgba(46,196,166,.15); color:var(--unitA); border:1px solid var(--unitA);}
+  .pB{background:rgba(91,141,239,.15); color:var(--unitB); border:1px solid var(--unitB);}
+  .pR{background:rgba(201,139,240,.15); color:var(--roof); border:1px solid var(--roof);}
+  @media (max-width:900px){
+    #app{flex-direction:column;}
+    #panel{width:100%; flex:1; border-inline-start:none; border-top:1px solid var(--line);}
+    #viewport{flex:0 0 55vh;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>חובות הלבבות 10–12, שכונת שפירא</h1>
+  <span class="sub">גוש 6971 · מגרש 2056 · 246.76 מ״ר · חלקה 59</span>
+  <span class="spacer"></span>
+  <span class="badge">לפי דף זכויות 13/08/2026</span>
+  <a class="specbtn" href="spec.html">📋 מפרט טכני מלא</a>
+</header>
+
+<div id="app">
+  <div id="viewport">
+    <div id="canvas3d"></div>
+    <div id="hud">
+      <div class="hudbox">
+        <h3>שכבות</h3>
+        <label class="lay"><input type="checkbox" data-layer="basement2" checked><span class="sw" style="background:#5c6b85"></span>מרתף −2 (חניה)</label>
+        <label class="lay"><input type="checkbox" data-layer="basement1" checked><span class="sw" style="background:#7284a3"></span>מרתף −1 (חניה + שירות)</label>
+        <label class="lay"><input type="checkbox" data-layer="ground" checked><span class="sw" style="background:var(--unitA)"></span>קומת קרקע · דירה A</label>
+        <label class="lay"><input type="checkbox" data-layer="floor1" checked><span class="sw" style="background:var(--unitB)"></span>קומה א׳ · דירה B</label>
+        <label class="lay"><input type="checkbox" data-layer="roof" checked><span class="sw" style="background:var(--roof)"></span>קומת גג (ג1) · דופלקס B</label>
+        <label class="lay"><input type="checkbox" data-layer="lines"><span class="sw" style="background:var(--gold)"></span>קווי מגרש וקווי בניין</label>
+        <label class="lay"><input type="checkbox" data-layer="labels"><span class="sw" style="background:#e8edf7"></span>תוויות</label>
+        <label class="lay"><input type="checkbox" data-layer="context" checked><span class="sw" style="background:#3a4763"></span>רחוב ומבנים שכנים</label>
+      </div>
+      <div class="hudbox">
+        <h3>תצוגה</h3>
+        <div class="viewbtns">
+          <button data-view="iso">איזומטרי</button>
+          <button data-view="street">מבט רחוב</button>
+          <button data-view="top">מבט על</button>
+          <button data-view="section">חתך</button>
+        </div>
+        <div class="slider" style="margin-top:10px;">
+          <span>פירוק קומות</span>
+          <input type="range" id="explode" min="0" max="6" step="0.1" value="0">
+        </div>
+      </div>
+    </div>
+    <div id="footerNote">גרור לסיבוב · גלגלת לזום · Shift+גרירה להזזה — הדמיה עקרונית, אינה תחליף למדידה ותכנון אדריכלי</div>
+  </div>
+
+  <div id="panel">
+    <div id="tabs">
+      <button class="active" data-tab="rights">דוח זכויות</button>
+      <button data-tab="mix">תמהיל דירות</button>
+      <button data-tab="parking">חניה ומרתפים</button>
+    </div>
+    <div id="tabContent">
+
+      <!-- ============ TAB 1: RIGHTS ============ -->
+      <div class="tabpage show" id="tab-rights">
+        <div class="kpis">
+          <div class="kpi"><div class="v">246.76 מ״ר</div><div class="l">שטח מגרש (מחושב גרפית)</div></div>
+          <div class="kpi"><div class="v">2 + גג</div><div class="l">קומות מעל הקרקע (+קומת גג לפי ג1)</div></div>
+          <div class="kpi"><div class="v">2 דירות</div><div class="l">מקסימום יח״ד במגרש</div></div>
+          <div class="kpi"><div class="v">8.8 מ׳</div><div class="l">גובה מבנה מרבי (ללא גג ג1)</div></div>
+        </div>
+
+        <h2>נתוני בסיס</h2>
+        <table>
+          <tr><th>פרמטר</th><th>ערך</th></tr>
+          <tr><td>יעוד</td><td>מגורים ב1 (תכנית 590 + שכונת שפירא 2707)</td></tr>
+          <tr><td>מדרגת שטח</td><td>200–299.9 מ״ר → <b>2 קומות, 2 יח״ד</b></td></tr>
+          <tr><td>שטח קומה עיקרי</td><td>25% מהמגרש = <b>61.7 מ״ר</b> לקומה</td></tr>
+          <tr><td>תוספת תכנית מ׳</td><td>עד 7% נוספים = <b>17.3 מ״ר</b> לקומה טיפוסית (בכפוף לעמידה בתנאי תכנית מ׳) → עד ~79 מ״ר לקומה</td></tr>
+          <tr><td>סה״כ עיקרי (2 קומות)</td><td>123.4 מ״ר, ועם תוספת מ׳ עד <b>~140–158 מ״ר</b></td></tr>
+          <tr><td>שטחי שירות מעל הכניסה</td><td>עד 35% מהשטח העיקרי + ממ״דים לפי הג״א + מחסנים 9 מ״ר ליח״ד</td></tr>
+          <tr><td>קווי בניין</td><td>קדמי 3 מ׳ · אחורי 5 מ׳ (עומק המגרש ~19 מ׳, מעל 18 מ׳) · צדדי — קירות משותפים וחזית אחידה</td></tr>
+          <tr><td>גובה</td><td>8.8 מ׳ (2 קומות) + בניה על הגג לפי ג1</td></tr>
+          <tr><td>מרתפים (ע1)</td><td>בית משותף: 2 קומות מרתף, עד 80% מהמגרש (~197 מ״ר לקומה), גובה קומה עד 4 מ׳</td></tr>
+        </table>
+
+        <h2>פרופורציות המודל</h2>
+        <p class="note">המודל בנוי במידות בנייה מקובלות בתל אביב: קומה 3.35 מ׳ ברוטו (נטו ~2.90), דלת כניסה 1.10×2.10, חלונות סלון 2.00×1.50, חלונות שינה 1.20×1.40 עם סף 0.90, מעקות 1.05 מ׳ לפי ת״י 1142, מעקה גג 1.10. הפירוט המלא — בכפתור "מפרט טכני מלא" למעלה.</p>
+
+        <h2>התראות תכנוניות</h2>
+        <ul>
+          <li>תמ״א 2/4 (נתב״ג): מגבלות גובה ואזור סיכון ציפורים ב׳ — לא רלוונטי בפועל לבניין של 8.8–12 מ׳.</li>
+          <li>תכנית "שפירא מושע 12" (507-0685032) הופקדה 15/01/2026 — עשויה לשנות זכויות; חובה לבדוק לפני היתר.</li>
+          <li>אזור רגישות להחדרת מי נגר (תמ״א 1) — תנאי היתר לשאיבת מי תהום במרתפים.</li>
+        </ul>
+        <p class="note">המקור: דף זכויות עיריית ת״א-יפו מיום 13/08/2026.</p>
+      </div>
+
+      <!-- ============ TAB 2: MIX ============ -->
+      <div class="tabpage" id="tab-mix">
+        <h2>תמהיל מוצע — 2 דירות דופלקס</h2>
+        <p>המדרגה התכנונית מתירה 2 יח״ד בלבד, ולכן התמהיל המשיא ערך הוא שני דופלקסים גדולים:</p>
+
+        <h2><span class="pill pA">דירה A</span> דופלקס גן (מרתף −1 + קרקע)</h2>
+        <table>
+          <tr><th>מפלס</th><th>תכולה</th><th>שטח</th></tr>
+          <tr><td>קרקע</td><td>סלון, מטבח, פינת אוכל, ממ״ד/חדר, שירותי אורחים, יציאה לגינה</td><td>~62–79 מ״ר עיקרי</td></tr>
+          <tr><td>מרתף −1 (חלק)</td><td>חדר משפחה, חדר עבודה, מחסן, שירותים (שטחי ע1)</td><td>~45–60 מ״ר</td></tr>
+          <tr><td colspan="2"><b>סה״כ ~120–135 מ״ר · 5 חדרים + גינה</b></td><td></td></tr>
+        </table>
+
+        <h2><span class="pill pB">דירה B</span> <span class="pill pR">+ גג</span> דופלקס גג (קומה א׳ + קומת גג ג1)</h2>
+        <table>
+          <tr><th>מפלס</th><th>תכולה</th><th>שטח</th></tr>
+          <tr><td>קומה א׳</td><td>סלון, מטבח, ממ״ד, 2 חדרי שינה, מרפסת</td><td>~62–79 מ״ר עיקרי</td></tr>
+          <tr><td>קומת גג (ג1)</td><td>יחידת הורים + מרפסת גג פתוחה</td><td>~30–36 מ״ר בנוי + מרפסת</td></tr>
+          <tr><td colspan="2"><b>סה״כ ~95–120 מ״ר · 4–5 חדרים + מרפסת גג</b></td><td></td></tr>
+        </table>
+
+        <p class="note">היקף הבניה על הגג לפי ג1 אינו אוטומטי — נקבע ע״י הוועדה המקומית בהתאם לתכניות המפורטות ולמדיניות "גגות בשכונת שפירא" (9023). חלופה: שתי דירות רגילות ללא גג, קומה לכל דירה.</p>
+      </div>
+
+      <!-- ============ TAB 3: PARKING ============ -->
+      <div class="tabpage" id="tab-parking">
+        <h2>חניה תת-קרקעית — מותרת</h2>
+        <ul>
+          <li>לפי תכנית ע1: בבית משותף מותרות <b>2 קומות מרתף</b> בשטח עד 80% מהמגרש (~197 מ״ר לקומה) ובגובה עד 4 מ׳ — מתאים לחניה, מחסנים ושטחים טכניים.</li>
+          <li>מספר מקומות החניה מוגבל לתקן החניה התקף בעת ההיתר — המרתף לא יכול להוסיף חניות מעבר לתקן.</li>
+          <li>רחוב חובות הלבבות אינו ברשימות מדרג 1/2 של מדיניות 9158 — כניסת רכב מהרחוב אפשרית עקרונית; בחזית של ~13 מ׳ רמפה קונבנציונלית צפופה, ולרוב עדיף מתקן חניה אוטומטי/מעלית רכב (מדיניות 9024).</li>
+        </ul>
+        <h2>מדיניות חניה עירונית</h2>
+        <ul>
+          <li>תקנון חניה 2016 (מדיניות 9072): באזור זה תקן <b>מרבי</b> (לא מזערי) — סדר גודל של עד מקום חניה אחד ליח״ד; ניתן גם לוותר על חניה.</li>
+          <li>מדיניות 9130 (2020): תקני חניה מופחתים בתכניות חדשות, עידוד הסדר תת-קרקעי ותשלום לקרן חניה כחלופה.</li>
+          <li>חובת חניית אופניים לפי מדיניות 9010.</li>
+        </ul>
+        <p class="note">בהיתר בפועל התקן נקבע ע״י אגף התנועה לפי המצב התקף באותו מועד.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+/* ================= scene setup ================= */
+const container = document.getElementById('canvas3d');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f1420);
+scene.fog = new THREE.Fog(0x0f1420, 90, 230);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.target.set(0, 4, 9);
+
+/* lights */
+scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x35302a, 0.85));
+const sun = new THREE.DirectionalLight(0xfff0d6, 1.15);
+sun.position.set(-28, 42, -22);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-45; sun.shadow.camera.right=45;
+sun.shadow.camera.top=45; sun.shadow.camera.bottom=-45;
+scene.add(sun);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+/* ================= parcel 59 orientation =================
+   Narrow ~12.7m frontage on the street, ~19.4m deep, rotated ~10deg with the
+   street's diagonal leg; the street bend sits by the west corner.
+   Local coords: x across frontage, z into the plot; rotated by ALPHA into world.
+*/
+const ALPHA = -0.1745;
+const CA = Math.cos(ALPHA), SA = Math.sin(ALPHA);
+const T = {x: 1.25, z: 1.15};
+function L2W(x, z){ return [ x*CA + z*SA + T.x, -x*SA + z*CA + T.z ]; }
+const PLOT_W = 12.7, PLOT_D = 19.4;
+const STREET_PTS = [ [-34, 0], [-6, 0], [30, 6.3] ];
+
+/* ---------- real construction levels (Tel Aviv norms) ----------
+   Ground floor slab +0.15 over garden. Storey height 3.35 gross (2.90 net).
+   GF walls 0.15-3.25, slab 3.25-3.50, F1 walls 3.50-6.60, roof slab 6.60-6.85,
+   parapet to 7.95 (< 8.8 limit). Roof room (G1) 6.85-9.65.
+*/
+const BW = 8.2, BD = 9.6;            // building footprint ~79 m^2
+const B_FRONT = 3.0, B_CX = 0;       // 3m front building line
+const B_CZ = B_FRONT + BD/2;         // 7.8
+const GF0 = 0.15, GF1 = 3.25, S1 = 3.50, F1TOP = 6.60, RS = 6.85, PAR = 7.95;
+const RR_W = 5.4, RR_D = 6.6, RR_TOP = 9.65;   // roof room ~36 m^2
+const RR_CX = -1.35, RR_CZ = 12.6 - RR_D/2;    // rear-west corner of the roof
+const BASE_W = 11.0, BASE_D = 17.9, BASE_H = 3.0;
+const BASE_Z = 0.8 + BASE_D/2;
+
+/* palette */
+const PLASTER = 0xf3efe7, PLASTER2 = 0xece7db, BAND = 0xd9d3c5, PLINTH = 0xb3aca0;
+const FRAME = 0x3d434d, GLASS = 0xaccbdd, WOOD = 0x5a4632, TILE = 0xcac3b4;
+
+const layers = {};
+function group(name){ const g = new THREE.Group(); layers[name]=g; scene.add(g); return g; }
+const gContext = group('context');
+const gLines   = group('lines');
+const gLabels  = group('labels');
+const gB2 = group('basement2');
+const gB1 = group('basement1');
+const gGround = group('ground');
+const gF1 = group('floor1');
+const gRoof = group('roof');
+[gB2,gB1,gGround,gF1,gRoof].forEach(g=>{ g.position.set(T.x,0,T.z); g.rotation.y = ALPHA; });
+gLines.visible = false;   /* off by default — cleaner look; toggle in HUD */
+gLabels.visible = false;
+
+/* ---------- helpers ---------- */
+function box(w,h,d,color,opacity=1,rough=.8){
+  const m = new THREE.Mesh(
+    new THREE.BoxGeometry(w,h,d),
+    new THREE.MeshStandardMaterial({color, roughness:rough, metalness:.05,
+      transparent:opacity<1, opacity})
+  );
+  m.castShadow = opacity===1; m.receiveShadow = true;
+  return m;
+}
+function edges(mesh, color=0x262c3a){
+  mesh.add(new THREE.LineSegments(
+    new THREE.EdgesGeometry(mesh.geometry),
+    new THREE.LineBasicMaterial({color, transparent:true, opacity:.35})
+  ));
+  return mesh;
+}
+function label(text, x,y,z, size=2.2, color='#e8edf7'){
+  const c = document.createElement('canvas'); c.width=512; c.height=128;
+  const ctx = c.getContext('2d');
+  ctx.font = '600 52px -apple-system, Arial';
+  ctx.fillStyle = color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,.7)'; ctx.shadowBlur=10;
+  ctx.fillText(text, 256, 64);
+  const t = new THREE.CanvasTexture(c);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:t, depthTest:false}));
+  s.scale.set(size*4, size, 1);
+  s.position.set(x,y,z);
+  return s;
+}
+function flatPoly(pts, color, y=0, opacity=1){
+  const shape = new THREE.Shape();
+  shape.moveTo(pts[0][0], -pts[0][1]);
+  for(let i=1;i<pts.length;i++) shape.lineTo(pts[i][0], -pts[i][1]);
+  shape.closePath();
+  const geo = new THREE.ShapeGeometry(shape);
+  geo.rotateX(-Math.PI/2);
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color, roughness:.85,
+    transparent:opacity<1, opacity, side:THREE.DoubleSide}));
+  m.position.y = y; m.receiveShadow = true;
+  return m;
+}
+function ribbonPoly(polyline, o1, o2){
+  const n = [];
+  for(let i=0;i<polyline.length;i++){
+    let dx=0, dz=0;
+    if(i>0){ dx += polyline[i][0]-polyline[i-1][0]; dz += polyline[i][1]-polyline[i-1][1]; }
+    if(i<polyline.length-1){ dx += polyline[i+1][0]-polyline[i][0]; dz += polyline[i+1][1]-polyline[i][1]; }
+    const len = Math.hypot(dx,dz); n.push([dz/len, -dx/len]);
+  }
+  const a = polyline.map((p,i)=>[p[0]+n[i][0]*o1, p[1]+n[i][1]*o1]);
+  const b = polyline.map((p,i)=>[p[0]+n[i][0]*o2, p[1]+n[i][1]*o2]).reverse();
+  return a.concat(b);
+}
+function alongStreet(t){
+  const segs=[]; let total=0;
+  for(let i=0;i<STREET_PTS.length-1;i++){
+    const L = Math.hypot(STREET_PTS[i+1][0]-STREET_PTS[i][0], STREET_PTS[i+1][1]-STREET_PTS[i][1]);
+    segs.push(L); total+=L;
+  }
+  let d = t*total;
+  for(let i=0;i<segs.length;i++){
+    if(d<=segs[i]){
+      const f=d/segs[i];
+      const x = STREET_PTS[i][0]+(STREET_PTS[i+1][0]-STREET_PTS[i][0])*f;
+      const z = STREET_PTS[i][1]+(STREET_PTS[i+1][1]-STREET_PTS[i][1])*f;
+      const ang = Math.atan2(STREET_PTS[i+1][0]-STREET_PTS[i][0], STREET_PTS[i+1][1]-STREET_PTS[i][1]);
+      return {x,z,ang};
+    }
+    d-=segs[i];
+  }
+  return {x:0,z:0,ang:0};
+}
+/* window: frame + glazing + exterior sill; local outward = +z */
+function makeWindow(w, h, opts={}){
+  const g = new THREE.Group();
+  const frame = box(w+.14, h+.14, .10, FRAME, 1, .5); g.add(frame);
+  const glass = box(w, h, .05, GLASS, .88, .25); glass.position.z = .035; g.add(glass);
+  /* mullion for wide windows */
+  if(w > 1.5){ const mul = box(.05, h, .06, FRAME, 1, .5); mul.position.z=.03; g.add(mul); }
+  if(!opts.noSill){ const sill = box(w+.24, .06, .14, BAND); sill.position.set(0, -h/2-.06, .05); g.add(sill); }
+  return g;
+}
+/* entry door 1.10 x 2.10 with frame and handle; local outward = +z */
+function makeDoor(w=1.1, h=2.1, color=WOOD){
+  const g = new THREE.Group();
+  const frame = box(w+.16, h+.10, .12, 0x8b857a); frame.position.y = .0; g.add(frame);
+  const door = box(w, h, .07, color, 1, .55); door.position.z = .03; g.add(door);
+  const handle = new THREE.Mesh(new THREE.SphereGeometry(.045, 10, 8),
+    new THREE.MeshStandardMaterial({color:0xc8c2b4, metalness:.6, roughness:.3}));
+  handle.position.set(w/2-.13, -.05, .09); g.add(handle);
+  return g;
+}
+/* place an opening group on a facade: face 'front'|'rear'|'east'|'west' */
+function placeOn(g, face, x, y, z){
+  g.position.set(x, y, z);
+  if(face==='front') g.rotation.y = Math.PI;
+  else if(face==='east') g.rotation.y = Math.PI/2;
+  else if(face==='west') g.rotation.y = -Math.PI/2;
+  return g;
+}
+
+/* ================= street & ground ================= */
+gContext.add(flatPoly([[-45,-25],[45,-25],[45,40],[-45,40]], 0x232c40, -0.12));
+gContext.add(flatPoly(ribbonPoly(STREET_PTS, 0, 1.9),  0x4a5265, 0.02));
+gContext.add(flatPoly(ribbonPoly(STREET_PTS, 1.9, 8.6), 0x39404f, 0.0));
+gContext.add(flatPoly(ribbonPoly(STREET_PTS, 8.6, 10.4),0x4a5265, 0.02));
+for(let t=0.03;t<0.98;t+=0.045){
+  const p = alongStreet(t);
+  const dash = box(.25,.02,1.7,0xd7dbe6);
+  dash.position.set(p.x + Math.cos(p.ang)*5.25, .06, p.z - Math.sin(p.ang)*5.25);
+  dash.rotation.y = p.ang;
+  gContext.add(dash);
+}
+const PLOT_LOCAL = [[-PLOT_W/2,0],[PLOT_W/2,0],[PLOT_W/2,PLOT_D],[-PLOT_W/2,PLOT_D]];
+gContext.add(flatPoly(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), 0x35543f, 0.04));
+
+/* ---------- front garden: fence, gate, path, hedge (in plot local coords) ---------- */
+(function(){
+  const garden = new THREE.Group();
+  garden.position.set(T.x,0,T.z); garden.rotation.y = ALPHA;
+  /* low masonry fence along the frontage with a gate opening at the path */
+  const fenceL = box(7.0, 1.15, .16, PLASTER2); fenceL.position.set(-2.85, .575, .08); garden.add(edges(fenceL));
+  const fenceR = box(2.6, 1.15, .16, PLASTER2); fenceR.position.set(5.05, .575, .08); garden.add(edges(fenceR));
+  const gate = box(1.35, 1.1, .05, FRAME, 1, .45); gate.position.set(2.0, .58, .08); garden.add(gate);
+  /* paved entry path from the gate to the door */
+  const path = box(1.5, .06, 3.1, TILE); path.position.set(2.3, .03, 1.55); garden.add(path);
+  /* hedge inside the fence */
+  const hedge = box(6.6, .8, .55, 0x2f5b3a); hedge.position.set(-3.0, .45, .55); garden.add(hedge);
+  /* garden tree */
+  const trunk = box(.3,1.5,.3,0x6b4f36); trunk.position.set(-4.6,.75,1.7); garden.add(trunk);
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(1.15, 12, 10),
+    new THREE.MeshStandardMaterial({color:0x3f7a4d, roughness:.9}));
+  crown.position.set(-4.6,2.3,1.7); crown.castShadow=true; garden.add(crown);
+  gContext.add(garden);
+})();
+
+/* ================= THE BUILDING — real proportions ================= */
+
+/* ---------- ground floor (unit A) ---------- */
+(function(){
+  /* plinth + walls */
+  const plinth = box(BW+.16, .55, BD+.16, PLINTH); plinth.position.set(B_CX, .275, B_CZ); gGround.add(edges(plinth));
+  const walls = box(BW, GF1-GF0, BD, PLASTER); walls.position.set(B_CX, (GF0+GF1)/2, B_CZ); gGround.add(edges(walls));
+  /* slab band above GF */
+  const slab = box(BW+.2, S1-GF1, BD+.2, BAND); slab.position.set(B_CX, (GF1+S1)/2, B_CZ); gGround.add(edges(slab));
+  /* entrance: door 1.10x2.10 + step + canopy */
+  gGround.add(placeOn(makeDoor(), 'front', 2.55, GF0+1.05, B_FRONT-.02));
+  const step = box(1.5, .15, .45, TILE); step.position.set(2.55, .075, B_FRONT-.28); gGround.add(step);
+  const canopy = box(1.9, .1, 1.15, BAND); canopy.position.set(2.55, 2.62, B_FRONT-.55); gGround.add(edges(canopy));
+  const rod1 = box(.05,.05,1.1,FRAME); rod1.position.set(1.75, 2.9, B_FRONT-.5); rod1.rotation.x=.45; gGround.add(rod1);
+  const rod2 = box(.05,.05,1.1,FRAME); rod2.position.set(3.35, 2.9, B_FRONT-.5); rod2.rotation.x=.45; gGround.add(rod2);
+  /* front: living-room window 2.00x1.50 (sill 0.95) + kitchen window 0.70x1.00 */
+  gGround.add(placeOn(makeWindow(2.0,1.5), 'front', -1.3, GF0+.95+.75, B_FRONT-.04));
+  gGround.add(placeOn(makeWindow(.7,1.0), 'front', -3.3, GF0+1.15+.5, B_FRONT-.04));
+  /* rear: garden door + window */
+  gGround.add(placeOn(makeDoor(1.5,2.1,0x4a5568), 'rear', -1.2, GF0+1.05, B_FRONT+BD+.02));
+  gGround.add(placeOn(makeWindow(1.2,1.4), 'rear', 2.0, GF0+.9+.7, B_FRONT+BD+.04));
+  /* side windows 0.80x1.00 */
+  gGround.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, GF0+1.1+.5, 5.4));
+  gGround.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, GF0+1.1+.5, 10.4));
+  gGround.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, GF0+1.1+.5, 6.2));
+  gGround.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, GF0+1.1+.5, 10.8));
+})();
+
+/* ---------- first floor (unit B) ---------- */
+(function(){
+  const walls = box(BW, F1TOP-S1, BD, PLASTER); walls.position.set(B_CX, (S1+F1TOP)/2, B_CZ); gF1.add(edges(walls));
+  const slab = box(BW+.2, RS-F1TOP, BD+.2, BAND); slab.position.set(B_CX, (F1TOP+RS)/2, B_CZ); gF1.add(edges(slab));
+  /* front balcony: 3.4 x 1.5 slab + glass railing 1.05 + sliding door 2.00x2.10 */
+  const bSlab = box(3.4, .18, 1.5, BAND); bSlab.position.set(.8, S1-.09, B_FRONT-.75); gF1.add(edges(bSlab));
+  const rF = box(3.34, 1.0, .04, GLASS, .45, .2); rF.position.set(.8, S1+.5, B_FRONT-1.48); gF1.add(rF);
+  const rE = box(.04, 1.0, 1.42, GLASS, .45, .2); rE.position.set(2.48, S1+.5, B_FRONT-.75); gF1.add(rE);
+  const rW = box(.04, 1.0, 1.42, GLASS, .45, .2); rW.position.set(-.88, S1+.5, B_FRONT-.75); gF1.add(rW);
+  const hr = box(3.44, .06, .06, FRAME); hr.position.set(.8, S1+1.05, B_FRONT-1.48); gF1.add(hr);
+  const hrE = box(.06, .06, 1.5, FRAME); hrE.position.set(2.48, S1+1.05, B_FRONT-.75); gF1.add(hrE);
+  const hrW = box(.06, .06, 1.5, FRAME); hrW.position.set(-.88, S1+1.05, B_FRONT-.75); gF1.add(hrW);
+  gF1.add(placeOn(makeWindow(2.0,2.1,{noSill:true}), 'front', .8, S1+1.05, B_FRONT-.04));
+  /* front bedroom window */
+  gF1.add(placeOn(makeWindow(1.2,1.4), 'front', -2.7, S1+.9+.7, B_FRONT-.04));
+  /* rear windows (one is the MAMAD blast window position) */
+  gF1.add(placeOn(makeWindow(1.2,1.4), 'rear', -2.0, S1+.9+.7, B_FRONT+BD+.04));
+  gF1.add(placeOn(makeWindow(1.0,1.0), 'rear', 2.2, S1+1.0+.5, B_FRONT+BD+.04));
+  /* side windows */
+  gF1.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, S1+1.1+.5, 5.4));
+  gF1.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, S1+1.1+.5, 10.4));
+  gF1.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, S1+1.1+.5, 6.2));
+  gF1.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, S1+1.1+.5, 10.8));
+  /* AC condensers on the east wall */
+  [2.1, 5.4].forEach(y=>{
+    const ac = box(.82,.62,.34,0xdfe2e6,1,.5); ac.position.set(BW/2+.22, y, 8.9); ac.rotation.y=Math.PI/2; gF1.add(edges(ac));
+  });
+})();
+
+/* ---------- roof: terrace, parapet, roof room (G1), pergola, solar ---------- */
+(function(){
+  /* terrace tiles over the whole roof */
+  const terr = box(BW, .06, BD, TILE); terr.position.set(B_CX, RS+.03, B_CZ); gRoof.add(terr);
+  /* parapet 1.10 with coping */
+  const pF = box(BW+.2, PAR-RS, .18, PLASTER2); pF.position.set(B_CX, (RS+PAR)/2, B_FRONT+.09); gRoof.add(edges(pF));
+  const pR = box(BW+.2, PAR-RS, .18, PLASTER2); pR.position.set(B_CX, (RS+PAR)/2, B_FRONT+BD-.09); gRoof.add(edges(pR));
+  const pE = box(.18, PAR-RS, BD+.2, PLASTER2); pE.position.set(BW/2+.01, (RS+PAR)/2, B_CZ); gRoof.add(edges(pE));
+  const pW = box(.18, PAR-RS, BD+.2, PLASTER2); pW.position.set(-BW/2-.01, (RS+PAR)/2, B_CZ); gRoof.add(edges(pW));
+  [ [B_CX, B_FRONT+.09, BW+.34, .26], [B_CX, B_FRONT+BD-.09, BW+.34, .26] ].forEach(([cx,cz,w,d])=>{
+    const cop = box(w, .07, d, BAND); cop.position.set(cx, PAR+.035, cz); gRoof.add(cop);
+  });
+  [ [BW/2+.01], [-BW/2-.01] ].forEach(([cx])=>{
+    const cop = box(.26, .07, BD+.34, BAND); cop.position.set(cx, PAR+.035, B_CZ); gRoof.add(cop);
+  });
+  /* roof room (G1) at the rear-west, ~36 m^2, storey 2.80 */
+  const rr = box(RR_W, RR_TOP-RS, RR_D, PLASTER); rr.position.set(RR_CX, (RS+RR_TOP)/2, RR_CZ); gRoof.add(edges(rr));
+  const rrRoof = box(RR_W+.24, .14, RR_D+.24, BAND); rrRoof.position.set(RR_CX, RR_TOP+.07, RR_CZ); gRoof.add(edges(rrRoof));
+  /* roof-room openings: terrace door 0.90x2.10 + window */
+  gRoof.add(placeOn(makeDoor(.9,2.1,0x4a5568), 'front', RR_CX+1.5, RS+1.05, RR_CZ-RR_D/2-.02));
+  gRoof.add(placeOn(makeWindow(1.2,1.2), 'front', RR_CX-1.3, RS+1.7, RR_CZ-RR_D/2-.04));
+  gRoof.add(placeOn(makeWindow(1.0,1.0), 'west', RR_CX-RR_W/2-.04, RS+1.7, RR_CZ));
+  /* pergola on the front-east terrace */
+  const slats = new THREE.Group();
+  for(let i=0;i<6;i++){
+    const s = box(2.5,.06,.12,0xb98f56); s.position.set(2.55, RS+2.32, 4.0+i*.42); slats.add(s);
+  }
+  gRoof.add(slats);
+  [[1.45,3.9],[3.65,3.9],[1.45,6.1],[3.65,6.1]].forEach(([px,pz])=>{
+    const post = box(.12,2.3,.12,0xb98f56); post.position.set(px, RS+1.15, pz); gRoof.add(post);
+  });
+  const beam1 = box(2.5,.1,.12,0xa87f4c); beam1.position.set(2.55, RS+2.26, 3.9); gRoof.add(beam1);
+  const beam2 = box(2.5,.1,.12,0xa87f4c); beam2.position.set(2.55, RS+2.26, 6.1); gRoof.add(beam2);
+  /* solar water heater + panel on the roof-room roof (dud shemesh) */
+  const tank = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,1.35,14),
+    new THREE.MeshStandardMaterial({color:0xe8e8e8, roughness:.4, metalness:.15}));
+  tank.rotation.z = Math.PI/2; tank.position.set(-2.4, RR_TOP+.55, RR_CZ+2.2); tank.castShadow=true;
+  gRoof.add(tank);
+  const panel = box(1.7,.07,2.1,0x27415f,1,.3);
+  panel.rotation.x = -.5; panel.position.set(-.6, RR_TOP+.62, RR_CZ+1.2); gRoof.add(edges(panel));
+})();
+
+/* ---------- basements (~197 m^2 each) with parked cars ---------- */
+const b2 = edges(box(BASE_W, BASE_H, BASE_D, 0x5c6b85, .4));
+b2.position.set(0, -BASE_H/2 - BASE_H - .4, BASE_Z); gB2.add(b2);
+const b1 = edges(box(BASE_W, BASE_H, BASE_D, 0x7284a3, .42));
+b1.position.set(0, -BASE_H/2 - .2, BASE_Z); gB1.add(b1);
+/* cars: 2.40x5.00 stalls represented by 1.75x4.4 vehicles */
+function pcar(g, x, z, y, col){
+  const c = new THREE.Group();
+  const body = box(1.75,.62,4.4,col,1,.5); body.position.y=.55;
+  const cab = box(1.6,.5,2.2,col,1,.4); cab.position.set(0,1.05,-.2);
+  c.add(edges(body), edges(cab));
+  c.position.set(x, y, z);
+  g.add(c);
+}
+pcar(gB1, -3.0, 5.2, -BASE_H-0.2+ .0, 0x8e97a8);
+pcar(gB1,  3.0, 5.2, -BASE_H-0.2+ .0, 0xb9bfca);
+pcar(gB1, -3.0, 12.0, -BASE_H-0.2, 0x9aa3b2);
+pcar(gB2, -3.0, 7.0, -BASE_H*2-0.4, 0xcdd3dc);
+pcar(gB2,  3.0, 10.5, -BASE_H*2-0.4, 0x8e97a8);
+/* ramp descending along the east side */
+const ramp = new THREE.Mesh(new THREE.BoxGeometry(2.8, .22, 7),
+  new THREE.MeshStandardMaterial({color:0x8b96ad, roughness:.8}));
+ramp.rotation.x = Math.atan2(BASE_H+.2, 6.5);
+ramp.position.set(4.6, -BASE_H/2+.45, 3.9);
+gB1.add(ramp);
+
+/* ================= context: neighbors as in the photos ================= */
+(function(){
+  const wall = edges(box(.28, 3.0, PLOT_D, 0xd9d4c8));
+  const [wx, wz] = L2W(-PLOT_W/2 - .15, PLOT_D/2);
+  wall.position.set(wx, 1.5, wz); wall.rotation.y = ALPHA;
+  gContext.add(wall);
+  const h1 = edges(box(7.5, 3.6, 9, 0xded8cc));
+  let p = L2W(-11.5, 5.5); h1.position.set(p[0], 1.8, p[1]); h1.rotation.y = ALPHA; gContext.add(h1);
+  const h2 = edges(box(7, 3.2, 7, 0xcfc9bd));
+  p = L2W(-11.2, 14.5); h2.position.set(p[0], 1.6, p[1]); h2.rotation.y = ALPHA; gContext.add(h2);
+})();
+(function(){
+  const nSeg = Math.floor(PLOT_D/0.55);
+  for(let i=0;i<nSeg;i++){
+    const f=(i+0.5)/nSeg;
+    const [px, pz] = L2W(PLOT_W/2 + .2, PLOT_D*f);
+    const post = box(.06, 1.7, .3, 0xf2f4f6);
+    post.position.set(px, .85, pz); post.rotation.y = ALPHA;
+    gContext.add(post);
+  }
+  const house = edges(box(8.5, 6.8, 13, 0xe9edf1));
+  const [hx, hz] = L2W(11.6, 8.5);
+  house.position.set(hx, 3.4, hz); house.rotation.y = ALPHA;
+  gContext.add(house);
+  [[7.3,5.2,4.5],[7.3,3.4,8.5],[7.3,5.8,12]].forEach(([lx,y,lz])=>{
+    const [px,pz] = L2W(lx, lz);
+    const patch = box(.12,.9,1.6,0x9fc6e8);
+    patch.position.set(px, y, pz); patch.rotation.y = ALPHA;
+    gContext.add(patch);
+  });
+})();
+(function(){
+  const fence = box(PLOT_W, 1.9, .12, 0x3c6b4f, .95);
+  const [fx,fz] = L2W(0, PLOT_D + .15);
+  fence.position.set(fx, .95, fz); fence.rotation.y = ALPHA;
+  gContext.add(fence);
+  const shed = edges(box(4.5, 2.6, 3.2, 0x4f8a63));
+  let p = L2W(-1, PLOT_D + 2.2); shed.position.set(p[0], 1.3, p[1]); shed.rotation.y = ALPHA; gContext.add(shed);
+  const shedRoof = box(5.1, .18, 3.8, 0x3d6e4e);
+  shedRoof.position.set(p[0], 2.7, p[1]); shedRoof.rotation.y = ALPHA; gContext.add(shedRoof);
+  const back1 = edges(box(9, 4.2, 7, 0xd8d2c6));
+  p = L2W(8, PLOT_D + 5); back1.position.set(p[0], 2.1, p[1]); back1.rotation.y = ALPHA; gContext.add(back1);
+  const back2 = edges(box(8, 3.4, 6, 0xcfc8ba));
+  p = L2W(-9, PLOT_D + 4); back2.position.set(p[0], 1.7, p[1]); back2.rotation.y = ALPHA; gContext.add(back2);
+})();
+(function(){
+  const [px, pz] = L2W(-2.2, -1.0);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.16,.19,9.5,10),
+    new THREE.MeshStandardMaterial({color:0x8a7358, roughness:.95}));
+  pole.position.set(px, 4.75, pz); pole.castShadow = true;
+  gContext.add(pole);
+  const arm = box(1.6,.1,.1,0x77644c); arm.position.set(px, 8.6, pz); arm.rotation.y = ALPHA; gContext.add(arm);
+  const cablePts=[]; for(let i=0;i<=20;i++){
+    const f=i/20;
+    cablePts.push(new THREE.Vector3(px+f*19, 8.5-Math.sin(f*Math.PI)*1.1, pz+f*3.4));
+  }
+  gContext.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(cablePts),
+    new THREE.LineBasicMaterial({color:0x556074})));
+})();
+function tree(x,z,s=1){
+  const t = new THREE.Group();
+  const trunk = box(.35,1.6,.35,0x6b4f36); trunk.position.y=.8;
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(1.3*s, 12, 10),
+    new THREE.MeshStandardMaterial({color:0x3f7a4d, roughness:.9}));
+  crown.position.y=2.3*s; crown.castShadow=true;
+  t.add(trunk,crown); t.position.set(x,0,z);
+  gContext.add(t);
+}
+let tp;
+tp = L2W(-13, -2.5); tree(tp[0], tp[1]);
+tp = L2W(3.5, PLOT_D+3.2); tree(tp[0], tp[1], 1.3);
+tp = L2W(-5.5, PLOT_D+2.5); tree(tp[0], tp[1]);
+tp = L2W(13, PLOT_D+5); tree(tp[0], tp[1], 1.2);
+[[0.12,0x9aa3b2],[0.3,0xcdd3dc],[0.62,0x8e97a8],[0.78,0xb9bfca]].forEach(([t,col])=>{
+  const p = alongStreet(t);
+  const car = edges(box(1.8,1.35,4.2,col));
+  car.position.set(p.x + Math.cos(p.ang)*9.4, .7, p.z - Math.sin(p.ang)*9.4);
+  car.rotation.y = p.ang;
+  gContext.add(car);
+});
+
+/* ================= regulation lines & labels (toggleable) ================= */
+function dashedLoop(pts, y, color){
+  const v = pts.map(p=>new THREE.Vector3(p[0], y, p[1]));
+  v.push(v[0].clone());
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(v),
+    new THREE.LineDashedMaterial({color, dashSize:.6, gapSize:.35}));
+  line.computeLineDistances();
+  return line;
+}
+gLines.add(dashedLoop(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), .18, 0xffd166));
+const ENV_LOCAL = [[-PLOT_W/2,3],[PLOT_W/2,3],[PLOT_W/2,PLOT_D-5],[-PLOT_W/2,PLOT_D-5]];
+gLines.add(dashedLoop(ENV_LOCAL.map(p=>L2W(p[0],p[1])), .2, 0xff6b6b));
+let lp2;
+lp2 = L2W(-PLOT_W/2-3.2, PLOT_D-2);
+gLines.add(label('קו מגרש (חלקה 59)', lp2[0], 1.3, lp2[1], 1.6, '#ffd166'));
+lp2 = L2W(0, 1.5);
+gLines.add(label('קו בניין קדמי 3 מ׳', lp2[0], 1.1, lp2[1], 1.5, '#ff8a8a'));
+lp2 = L2W(0, PLOT_D-2.4);
+gLines.add(label('קו בניין אחורי 5 מ׳', lp2[0], 1.1, lp2[1], 1.4, '#ff8a8a'));
+(function(){
+  const a = L2W(-BW/2-1.4, B_FRONT);
+  const hGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(a[0], 0, a[1]),
+    new THREE.Vector3(a[0], PAR, a[1])]);
+  gLines.add(new THREE.Line(hGeo, new THREE.LineBasicMaterial({color:0x93a0b8})));
+  const b = L2W(-BW/2-2.7, B_FRONT);
+  gLines.add(label('8.0 מ׳ (מותר 8.8)', b[0], PAR/2, b[1], 1.4, '#93a0b8'));
+})();
+/* floating labels */
+function wlabel(text, lx, y, lz, size, color){
+  const p = L2W(lx, lz);
+  gLabels.add(label(text, p[0], y, p[1], size, color));
+}
+wlabel('קרקע · דירה A · ~79 מ״ר', -8.3, 1.8, 7.8, 1.7, '#7fe7d2');
+wlabel('קומה א׳ · דירה B · ~79 מ״ר', -8.3, 5.0, 7.8, 1.7, '#a9c2f5');
+wlabel('קומת גג ג1 · ~36 מ״ר', -8.3, 8.6, 10.5, 1.6, '#e2c2f7');
+wlabel('מרתף −1 · חניה · ~197 מ״ר', -8.3, -1.6, 9, 1.5, '#b7c5df');
+wlabel('מרתף −2 · חניה · ~197 מ״ר', -8.3, -4.7, 9, 1.5, '#9fb0cc');
+gLabels.add(label('רחוב חובות הלבבות', -12, .9, -5.2, 1.7, '#aab6cf'));
+
+/* ================= explode ================= */
+const explodeTargets = [
+  {g:gB2, factor:-1.6},
+  {g:gB1, factor:-0.8},
+  {g:gGround, factor:0},
+  {g:gF1, factor:0.9},
+  {g:gRoof, factor:1.8},
+];
+document.getElementById('explode').addEventListener('input', e=>{
+  const v = parseFloat(e.target.value);
+  explodeTargets.forEach(t=> t.g.position.y = t.factor * v);
+});
+
+/* ================= layer toggles ================= */
+document.querySelectorAll('[data-layer]').forEach(cb=>{
+  layers[cb.dataset.layer].visible = cb.checked;
+  cb.addEventListener('change', ()=>{ layers[cb.dataset.layer].visible = cb.checked; });
+});
+
+/* ================= views ================= */
+const views = {
+  iso:    {pos:[24, 17, -15], tgt:[-0.1,3.5,8]},
+  street: {pos:[2.2, 1.7, -13.5], tgt:[0.3,3.6,7]},
+  top:    {pos:[-0.1, 58, 9.01], tgt:[-0.1,0,9]},
+  section:{pos:[-33, 5, 9],   tgt:[-0.1,1.5,9]},
+};
+function setView(name){
+  const v = views[name];
+  camera.position.set(...v.pos);
+  controls.target.set(...v.tgt);
+  controls.update();
+}
+document.querySelectorAll('[data-view]').forEach(b=>{
+  b.addEventListener('click', ()=> setView(b.dataset.view));
+});
+setView('iso');
+
+/* ================= tabs ================= */
+document.querySelectorAll('#tabs button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tabpage').forEach(x=>x.classList.remove('show'));
+    b.classList.add('active');
+    document.getElementById('tab-'+b.dataset.tab).classList.add('show');
+  });
+});
+
+/* ================= resize & loop ================= */
+function resize(){
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w,h);
+}
+window.addEventListener('resize', resize);
+resize();
+(function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>
