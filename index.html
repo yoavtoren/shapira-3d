@@ -291,17 +291,17 @@
         <h2><span class="pill pA">דירה A</span> דופלקס גן (מרתף −1 + קרקע)</h2>
         <table>
           <tr><th>מפלס</th><th>תכולה</th><th>שטח</th></tr>
-          <tr><td>קרקע</td><td>סלון, מטבח, פינת אוכל, ממ״ד/חדר, שירותי אורחים, יציאה לגינה</td><td>~62–79 מ״ר עיקרי</td></tr>
-          <tr><td>מרתף −1 (חלק)</td><td>חדר משפחה, חדר עבודה, מחסן, שירותים (שטחי ע1)</td><td>~45–60 מ״ר</td></tr>
-          <tr><td colspan="2"><b>סה״כ ~120–135 מ״ר · 5 חדרים + גינה</b></td><td></td></tr>
+          <tr><td>קרקע</td><td>סלון-מטבח-אוכל ~38 מ״ר, ממ״ד (עבודה), שירותי אורחים, מסדרון לגינה</td><td>~101 מ״ר ברוטו (79 עיקרי + שירות)</td></tr>
+          <tr><td>מרתף −1 (חלק)</td><td>2 חדרי שינה עם חצר אנגלית, חדר משפחה, רחצה, מחסן</td><td>~55 מ״ר</td></tr>
+          <tr><td colspan="2"><b>סה״כ ~130 מ״ר נטו · 5 חדרים + גינה ~60 מ״ר</b></td><td></td></tr>
         </table>
 
         <h2><span class="pill pB">דירה B</span> <span class="pill pR">+ גג</span> דופלקס גג (קומה א׳ + קומת גג ג1)</h2>
         <table>
           <tr><th>מפלס</th><th>תכולה</th><th>שטח</th></tr>
-          <tr><td>קומה א׳</td><td>סלון, מטבח, ממ״ד, 2 חדרי שינה, מרפסת</td><td>~62–79 מ״ר עיקרי</td></tr>
-          <tr><td>קומת גג (ג1)</td><td>יחידת הורים + מרפסת גג פתוחה</td><td>~30–36 מ״ר בנוי + מרפסת</td></tr>
-          <tr><td colspan="2"><b>סה״כ ~95–120 מ״ר · 4–5 חדרים + מרפסת גג</b></td><td></td></tr>
+          <tr><td>קומה א׳</td><td>סלון-מטבח ~30 מ״ר, ממ״ד-שינה, 2 חדרי שינה, מרפסת</td><td>~101 מ״ר ברוטו (79 עיקרי + שירות)</td></tr>
+          <tr><td>קומת גג (ג1)</td><td>סוויטת הורים + רחצה + מרפסת גג</td><td>~40 מ״ר בנוי + מרפסת ~55</td></tr>
+          <tr><td colspan="2"><b>סה״כ ~115 מ״ר נטו · 5 חדרים + מרפסת גג</b></td><td></td></tr>
         </table>
 
         <p class="note">היקף הבניה על הגג לפי ג1 אינו אוטומטי — נקבע ע״י הוועדה המקומית בהתאם לתכניות המפורטות ולמדיניות "גגות בשכונת שפירא" (9023). חלופה: שתי דירות רגילות ללא גג, קומה לכל דירה.</p>
@@ -340,6 +340,8 @@ scene.fog = new THREE.Fog(0xc4d9ec, 120, 340);
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;   /* filmic rolloff — stops the blown-out whites */
+renderer.toneMappingExposure = 1.02;
 container.appendChild(renderer.domElement);
 renderer.domElement.style.touchAction = 'none';   /* smooth touch orbit on mobile */
 
@@ -379,12 +381,16 @@ const STREET_PTS = [ [-34, 0], [-6, 0], [30, 6.3] ];
    GF walls 0.15-3.25, slab 3.25-3.50, F1 walls 3.50-6.60, roof slab 6.60-6.85,
    parapet to 7.95 (< 8.8 limit). Roof room (G1) 6.85-9.65.
 */
-const BW = 8.2, BD = 9.6;            // building footprint ~79 m^2
-const B_FRONT = 3.0, B_CX = 0;       // 3m front building line
-const B_CZ = B_FRONT + BD/2;         // 7.8
+/* floor plate 9.9 x 10.2 = ~101 m² gross: 78.7 m² main (the cap) + stair core 11.0
+   + MAMAD 11.2, both counted as SERVICE area on top of the main-area allowance.
+   The building hugs the south common wall; a 2.8m drive strip stays on the north. */
+const BW = 9.9, BD = 10.2;
+const B_FRONT = 3.0, B_CX = -1.4;    // 3m front line; south wall on the plot line
+const B_CZ = B_FRONT + BD/2;         // 8.1
+const BE = B_CX + BW/2, BWs = B_CX - BW/2;   // east/west wall lines: +3.55 / −6.35
 const GF0 = 0.15, GF1 = 3.25, S1 = 3.50, F1TOP = 6.60, RS = 6.85, PAR = 7.95;
-const RR_W = 5.4, RR_D = 6.6, RR_TOP = 9.65;   // roof room ~36 m^2
-const RR_CX = -1.35, RR_CZ = 12.6 - RR_D/2;    // rear-west corner of the roof
+const RR_W = 6.0, RR_D = 6.6, RR_TOP = 9.65;   // roof suite ~39.6 m²
+const RR_CX = -3.2, RR_CZ = B_FRONT + BD - RR_D/2;   // rear-west block of the roof
 const BASE_W = 11.0, BASE_D = 17.9, BASE_H = 3.0;
 const BASE_Z = 0.8 + BASE_D/2;
 
@@ -538,20 +544,58 @@ function speckle(g, s, n, col, aMin, aMax, rMax=2.2){
     g.fillRect(Math.random()*s, Math.random()*s, r, r);
   }
 }
-/* sun-bleached asphalt with cracks and patches */
-const texAsphalt = canvasTex(256, (g,s)=>{
-  g.fillStyle = '#8f9194'; g.fillRect(0,0,s,s);
-  speckle(g,s,1400,'rgba(52,54,58,A)',.05,.25);
-  speckle(g,s,700,'rgba(213,215,218,A)',.04,.16);
-  g.strokeStyle='rgba(58,60,64,.55)'; g.lineWidth=1.3;
-  for(let k=0;k<3;k++){
+/* worn dark-grey asphalt: tonal blotches, wheel tracks, aggregate, cracks, tar squiggles, patches */
+const texAsphalt = canvasTex(512, (g,s)=>{
+  g.fillStyle = '#4c4e51'; g.fillRect(0,0,s,s);
+  /* large tonal blotches — old asphalt is never one grey */
+  for(let i=0;i<28;i++){
+    const v = 58+Math.random()*36|0;
+    g.fillStyle = `rgba(${v},${v+2},${v+5},.15)`;
+    g.beginPath();
+    g.ellipse(Math.random()*s, Math.random()*s, 40+Math.random()*130, 30+Math.random()*90, Math.random()*3, 0, 7);
+    g.fill();
+  }
+  /* lighter polished wheel tracks running with the street (u axis) */
+  [.28,.42,.63,.77].forEach(v=>{
+    const grd = g.createLinearGradient(0, s*v-24, 0, s*v+24);
+    grd.addColorStop(0,'rgba(134,136,138,0)');
+    grd.addColorStop(.5,'rgba(134,136,138,.24)');
+    grd.addColorStop(1,'rgba(134,136,138,0)');
+    g.fillStyle = grd; g.fillRect(0, s*v-24, s, 48);
+  });
+  /* exposed aggregate */
+  speckle(g,s,3400,'rgba(22,23,25,A)',.06,.30,1.7);
+  speckle(g,s,2600,'rgba(158,160,163,A)',.05,.22,1.4);
+  speckle(g,s,600,'rgba(200,201,203,A)',.05,.16,1.0);
+  /* meandering cracks with side branches */
+  g.strokeStyle='rgba(18,19,21,.66)'; g.lineWidth=1.7;
+  for(let k=0;k<7;k++){
     g.beginPath(); let x=Math.random()*s, y=0; g.moveTo(x,y);
-    while(y<s){ x+=(Math.random()-.5)*26; y+=8+Math.random()*18; g.lineTo(x,y); }
+    while(y<s){
+      x+=(Math.random()-.5)*30; y+=6+Math.random()*16; g.lineTo(x,y);
+      if(Math.random()<.10){ g.lineTo(x+(Math.random()-.5)*55, y+Math.random()*28); g.moveTo(x,y); }
+    }
     g.stroke();
   }
-  g.fillStyle='rgba(70,72,76,.18)';
-  g.beginPath(); g.ellipse(s*.7,s*.3,s*.26,s*.15,.5,0,7); g.fill();
-}, .085, .085);
+  g.beginPath(); let cy=s*.52, cx=0; g.moveTo(cx,cy);
+  while(cx<s){ cy+=(Math.random()-.5)*16; cx+=8+Math.random()*18; g.lineTo(cx,cy); }
+  g.stroke();
+  /* shiny tar crack-seal squiggles */
+  g.strokeStyle='rgba(14,15,17,.5)'; g.lineWidth=5; g.lineJoin='round';
+  for(let k=0;k<3;k++){
+    g.beginPath(); let x=Math.random()*s, y=Math.random()*s; g.moveTo(x,y);
+    for(let i=0;i<6;i++){ x+=(Math.random()-.5)*95; y+=(Math.random()-.5)*95; g.lineTo(x,y); }
+    g.stroke();
+  }
+  /* rectangular utility patches, darker with a hard edge */
+  for(let k=0;k<3;k++){
+    const px=Math.random()*s*.8, py=Math.random()*s*.8, pw=60+Math.random()*120, ph=40+Math.random()*90;
+    g.fillStyle='rgba(28,29,32,.30)'; g.fillRect(px,py,pw,ph);
+    g.strokeStyle='rgba(16,17,19,.5)'; g.lineWidth=3; g.strokeRect(px,py,pw,ph);
+  }
+  /* pale kurkar dust blown along both gutters */
+  g.fillStyle='rgba(178,168,146,.12)'; g.fillRect(0,0,s,16); g.fillRect(0,s-16,s,16);
+}, .07, .07);
 /* the white kurkar sand of the parking lots, with tyre tracks */
 const texSand = canvasTex(256, (g,s)=>{
   g.fillStyle = '#e9e1cc'; g.fillRect(0,0,s,s);
@@ -561,28 +605,50 @@ const texSand = canvasTex(256, (g,s)=>{
   g.beginPath(); g.moveTo(0,s*.62); g.bezierCurveTo(s*.3,s*.55,s*.6,s*.7,s,s*.6); g.stroke();
   g.beginPath(); g.moveTo(0,s*.72); g.bezierCurveTo(s*.3,s*.66,s*.6,s*.8,s,s*.7); g.stroke();
 }, .11, .11);
-/* grey interlocking pavement (avnei mishtelevet) */
-const texPavers = canvasTex(256, (g,s)=>{
-  g.fillStyle = '#a9a7a2'; g.fillRect(0,0,s,s);
-  const cw=64, ch=32;
-  for(let y=0;y<s/ch;y++) for(let x=-1;x<s/cw;x++){
+/* grey interlocking pavement (avnei mishtelevet): running bond, sand joints, stains */
+const texPavers = canvasTex(512, (g,s)=>{
+  g.fillStyle = '#78756d'; g.fillRect(0,0,s,s);              /* sandy joint colour */
+  const cw=100, ch=50;
+  for(let y=0;y<s/ch;y++) for(let x=-1;x<s/cw+1;x++){
     const off = (y%2)?cw/2:0;
-    const v = 188+Math.random()*24|0;
-    g.fillStyle = `rgb(${v},${v-2},${v-6})`;
-    g.fillRect(x*cw+off+1, y*ch+1, cw-2, ch-2);
+    const v = 156+Math.random()*26|0, warm = Math.random()*12|0;
+    g.fillStyle = `rgb(${v+warm},${v},${v-7})`;
+    g.fillRect(x*cw+off+2, y*ch+2, cw-4, ch-4);
+    /* per-stone weathering: darker damp stone / chipped light corner */
+    if(Math.random()<.16){ g.fillStyle='rgba(96,90,78,.28)'; g.fillRect(x*cw+off+2, y*ch+2, cw-4, ch-4); }
+    if(Math.random()<.25){ g.fillStyle='rgba(228,225,216,.35)'; g.fillRect(x*cw+off+2, y*ch+2, cw-4, 6); }
   }
-}, 1, 1);
-/* the blue brush-stroke mural on no. 12's upper floor */
+  /* general grime + kurkar dust */
+  speckle(g,s,1500,'rgba(74,70,62,A)',.03,.13,1.7);
+  speckle(g,s,900,'rgba(232,228,218,A)',.03,.10,1.2);
+  g.fillStyle='rgba(150,138,110,.10)';
+  for(let i=0;i<5;i++){
+    g.beginPath();
+    g.ellipse(Math.random()*s, Math.random()*s, 50+Math.random()*90, 30+Math.random()*60, Math.random()*3, 0, 7);
+    g.fill();
+  }
+}, .5, .5);
+/* the blue brush-stroke mural on no. 12's upper floor: rows of short horizontal
+   strokes with dry-brush tails, like the real paintwork */
 const texMural = canvasTex(512, (g,s)=>{
-  g.fillStyle = '#f2efe7'; g.fillRect(0,0,s,s);
-  const blues = ['rgba(114,146,188,.9)','rgba(146,170,203,.85)','rgba(90,124,168,.9)'];
-  for(let i=0;i<30;i++){
-    g.save();
-    g.translate(Math.random()*s, s*.08+Math.random()*s*.84);
-    g.rotate((Math.random()*80-40)*Math.PI/180);
-    g.fillStyle = blues[i%3];
-    g.fillRect(-9, -(24+Math.random()*70), 15+Math.random()*12, 50+Math.random()*130);
-    g.restore();
+  g.fillStyle = '#f4f1ea'; g.fillRect(0,0,s,s);
+  const blues = ['rgba(122,152,190,.92)','rgba(150,173,205,.88)','rgba(96,128,170,.92)','rgba(74,104,150,.85)'];
+  for(let row=0; row<7; row++){
+    let x = Math.random()*40 - 20;
+    const y = 34 + row*66 + (Math.random()-.5)*26;
+    while(x < s){
+      const len = 40 + Math.random()*85, h = 16 + Math.random()*11;
+      if(Math.random() < .78){
+        g.save();
+        g.translate(x+len/2, y); g.rotate((Math.random()*10-5)*Math.PI/180);
+        g.fillStyle = blues[Math.random()*4|0];
+        g.fillRect(-len/2, -h/2, len, h);
+        g.globalAlpha = .45; g.fillRect(len/2, -h/2+2, 10+Math.random()*14, h-4);
+        g.globalAlpha = 1;
+        g.restore();
+      }
+      x += len + 8 + Math.random()*44;
+    }
   }
 });
 /* dirty plaster wall with the big tag, as on the house across the street */
@@ -631,7 +697,7 @@ const texMail = canvasTex(128, (g,s)=>{
     g.fillStyle='#62676c'; g.fillRect(x*42+8, y*32+16, 28, 4);
   }
 });
-const matAsphalt = new THREE.MeshStandardMaterial({map:texAsphalt, roughness:.96});
+const matAsphalt = new THREE.MeshStandardMaterial({map:texAsphalt, roughness:.97});
 const matSand    = new THREE.MeshStandardMaterial({map:texSand, roughness:1});
 const matPavers  = new THREE.MeshStandardMaterial({map:texPavers, roughness:.9});
 
@@ -643,20 +709,83 @@ gContext.add(flatPoly(ribbonPoly(STREET_PTS, 0, 1.9),  matPavers, 0.06));   /* n
 gContext.add(flatPoly(ribbonPoly(STREET_PTS, 1.9, 8.6), matAsphalt, 0.0));  /* roadway */
 gContext.add(flatPoly(ribbonPoly(STREET_PTS, 8.6, 10.4), matPavers, 0.06)); /* far sidewalk */
 gContext.add(flatPoly(ribbonPoly(STREET_PTS, 10.4, 23), matSand, 0.02));    /* white-sand parking across */
-/* red-and-white painted curbstones, 1m segments, both sides */
+/* painted curbstones, 1m segments with slight settling jitter:
+   plot side no-stopping red-white, far side blue-white parking bays (grey at the bend) */
 (function(){
   const n = 64;
-  [1.98, 8.52].forEach(off=>{
+  const RED = 0x8f342b, WHT = 0xcdc8bd, BLU = 0x27508a, BWH = 0xd6d9d9, GRY = 0xa9a498;
+  function run(off, palette, skip){
     for(let i=0;i<n;i++){
       const t = (i+.5)/n;
+      if(skip && skip(i)) continue;
       const p = alongStreet(t);
-      const c = box(.22,.15,1.0, i%2 ? 0xd8d3c8 : 0xa8433a, 1, .7);
+      const c = box(.24,.2,.97, palette(i,t), 1, .68);
       c.castShadow = false;
-      c.position.set(p.x + Math.cos(p.ang)*off, .075, p.z - Math.sin(p.ang)*off);
-      c.rotation.y = p.ang;
+      c.position.set(p.x + Math.cos(p.ang)*off, .045 + Math.random()*.015, p.z - Math.sin(p.ang)*off);
+      c.rotation.y = p.ang + (Math.random()-.5)*.022;
+      c.rotation.z = (Math.random()-.5)*.014;
       gContext.add(c);
     }
+  }
+  /* dropped curb: no blocks across the driveway mouth (i 38-41 ~ t .60-.65) */
+  const REDS = [0x8f342b, 0x9c4536, 0x83302a];   /* fresh / faded / grimy paint */
+  run(1.98, (i)=> i%2 ? WHT : REDS[i%3 === 0 ? 0 : (i%3)], i => i >= 38 && i <= 41);
+  run(8.52, (i,t)=> (t<.06 || t>.94) ? GRY
+                  : (t>.40 && t<.55) ? (i%2 ? WHT : RED)      /* the bend: no stopping */
+                  : (i%2 ? BWH : BLU));                        /* parking bays by the sand lot */
+  /* sloped grey apron where the curb drops for the driveway */
+  const apron = box(4.2, .07, .6, 0x8f8b84, 1, .9); apron.castShadow = false;
+  const ap = alongStreet(.6234);
+  apron.position.set(ap.x + Math.cos(ap.ang)*1.95, .035, ap.z - Math.sin(ap.ang)*1.95);
+  apron.rotation.y = ap.ang + Math.PI/2;
+  gContext.add(apron);
+  /* concrete gutter channel hugging each curb, stained darker mid-stream */
+  gContext.add(flatPoly(ribbonPoly(STREET_PTS, 2.2, 2.56), 0x8a8984, 0.008));
+  gContext.add(flatPoly(ribbonPoly(STREET_PTS, 7.94, 8.3), 0x8a8984, 0.008));
+  gContext.add(flatPoly(ribbonPoly(STREET_PTS, 2.28, 2.48), 0x767570, 0.012));
+  gContext.add(flatPoly(ribbonPoly(STREET_PTS, 8.02, 8.22), 0x767570, 0.012));
+  /* old centreline seam where two paving passes meet */
+  gContext.add(flatPoly(ribbonPoly(STREET_PTS, 5.18, 5.26), 0x323438, 0.004));
+  /* storm drains at the low points, iron grate + dark stain bleeding onto the road */
+  [[.36, 2.75],[.36, 7.85],[.72, 2.75]].forEach(([t,off])=>{
+    const p = alongStreet(t);
+    const x = p.x+Math.cos(p.ang)*off, z = p.z-Math.sin(p.ang)*off;
+    const gr = box(.58,.035,.42, 0x2e3134, 1, .55); gr.castShadow=false;
+    gr.position.set(x,.012,z); gr.rotation.y = p.ang; gContext.add(gr);
+    for(let k=0;k<5;k++){
+      const slot = box(.5,.012,.045, 0x101214, 1, .5); slot.castShadow=false;
+      slot.position.set(x,.036,z); slot.rotation.y = p.ang;
+      slot.translateZ(-.16+k*.08); gContext.add(slot);
+    }
+    const stain = box(1.1,.004,.8, 0x3c3e42, .5, 1); stain.castShadow=false;
+    stain.position.set(x,.006,z); stain.rotation.y = p.ang; gContext.add(stain);
   });
+  /* round iron manhole covers out in the roadway */
+  [[.30,5.4],[.52,4.2],[.66,5.9],[.85,4.6]].forEach(([t,off])=>{
+    const p = alongStreet(t);
+    const x = p.x+Math.cos(p.ang)*off, z = p.z-Math.sin(p.ang)*off;
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.022,22),
+      new THREE.MeshStandardMaterial({color:0x393b3e, roughness:.62, metalness:.28}));
+    rim.castShadow = false; rim.position.set(x,.012,z); gContext.add(rim);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.026,22),
+      new THREE.MeshStandardMaterial({color:0x2c2e31, roughness:.5, metalness:.35}));
+    lid.castShadow = false; lid.position.set(x,.02,z); gContext.add(lid);
+  });
+  /* dry ficus leaves drifted onto the tarmac, thickest under the trees */
+  const leafCols = [0x5d4a26, 0x54431f, 0x6b5730, 0x4a3c1e, 0x70603a];
+  for(let i=0;i<150;i++){
+    const nearTree = Math.random()<.62;
+    const t = nearTree ? (Math.random()<.5 ? .2+Math.random()*.16 : .7+Math.random()*.2)
+                       : Math.random();
+    const off = 2.2 + Math.random()*6.0;
+    const p = alongStreet(t);
+    const lf = box(.04+Math.random()*.04, .006, .07+Math.random()*.06,
+      leafCols[Math.random()*leafCols.length|0], 1, .95);
+    lf.castShadow = false;
+    lf.position.set(p.x+Math.cos(p.ang)*off, .012, p.z-Math.sin(p.ang)*off);
+    lf.rotation.y = Math.random()*Math.PI*2;
+    gContext.add(lf);
+  }
 })();
 const PLOT_LOCAL = [[-PLOT_W/2,0],[PLOT_W/2,0],[PLOT_W/2,PLOT_D],[-PLOT_W/2,PLOT_D]];
 const lawnMesh = flatPoly(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), 0x74915c, 0.04);
@@ -701,7 +830,7 @@ let vGate, pedGateH;   /* animated by the entry simulations */
   /* garden tree */
   const trunk = box(.3,1.5,.3,0x6b4f36); trunk.position.set(-4.6,.75,1.7); garden.add(trunk);
   const crown = new THREE.Mesh(new THREE.SphereGeometry(1.15, 12, 10),
-    new THREE.MeshStandardMaterial({color:0x3f7a4d, roughness:.9}));
+    new THREE.MeshStandardMaterial({color:0x35663c, roughness:.9}));
   crown.position.set(-4.6,2.3,1.7); crown.castShadow=true; garden.add(crown);
   gContext.add(garden);
 })();
@@ -732,23 +861,22 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
   const entryDoor = makeDoor();
   mainDoorLeaf = entryDoor.userData.leaf;
   gGround.add(placeOn(entryDoor, 'front', 2.55, GF0+1.05, B_FRONT-.02));
-  /* separate entrance to unit B's stair core, on the south wall */
-  gGround.add(placeOn(makeDoor(1.0,2.05,0x50565e), 'east', BW/2+.04, GF0+1.03, 11.1));
+  /* separate entrance to unit B's stair core, from the north drive strip */
+  gGround.add(placeOn(makeDoor(1.0,2.05,0x50565e), 'east', BE+.04, GF0+1.03, 11.0));
   const step = box(1.5, .15, .45, TILE); step.position.set(2.55, .075, B_FRONT-.28); gGround.add(step);
   const canopy = box(1.9, .1, 1.15, BAND); canopy.position.set(2.55, 2.62, B_FRONT-.55); gGround.add(edges(canopy));
   const rod1 = box(.05,.05,1.1,FRAME); rod1.position.set(1.75, 2.9, B_FRONT-.5); rod1.rotation.x=.45; gGround.add(rod1);
   const rod2 = box(.05,.05,1.1,FRAME); rod2.position.set(3.35, 2.9, B_FRONT-.5); rod2.rotation.x=.45; gGround.add(rod2);
   /* front: living-room window 2.00x1.50 (sill 0.95) + kitchen window 0.70x1.00 */
-  gGround.add(placeOn(makeWindow(2.0,1.5), 'front', -1.3, GF0+.95+.75, B_FRONT-.04));
-  gGround.add(placeOn(makeWindow(.7,1.0), 'front', -3.3, GF0+1.15+.5, B_FRONT-.04));
-  /* rear: garden door + window */
-  gGround.add(placeOn(makeDoor(1.5,2.1,0x4a5568), 'rear', -1.2, GF0+1.05, B_FRONT+BD+.02));
-  gGround.add(placeOn(makeWindow(1.2,1.4), 'rear', 2.0, GF0+.9+.7, B_FRONT+BD+.04));
-  /* side windows 0.80x1.00 */
-  gGround.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, GF0+1.1+.5, 5.4));
-  gGround.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, GF0+1.1+.5, 10.4));
-  gGround.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, GF0+1.1+.5, 6.2));
-  gGround.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, GF0+1.1+.5, 10.8));
+  gGround.add(placeOn(makeWindow(2.0,1.5), 'front', -1.5, GF0+.95+.75, B_FRONT-.04));
+  gGround.add(placeOn(makeWindow(.7,1.0), 'front', -4.9, GF0+1.15+.5, B_FRONT-.04));
+  /* rear: garden door through the hall + MAMAD blast window + core light */
+  gGround.add(placeOn(makeDoor(1.2,2.1,0x4a5568), 'rear', 0.4, GF0+1.05, B_FRONT+BD+.02));
+  gGround.add(placeOn(makeWindow(1.0,1.0), 'rear', -4.7, GF0+1.0+.5, B_FRONT+BD+.04));
+  gGround.add(placeOn(makeWindow(1.0,1.0), 'rear', 2.35, GF0+1.0+.5, B_FRONT+BD+.04));
+  /* side windows on the drive-strip wall only — the south wall is a common wall */
+  gGround.add(placeOn(makeWindow(.8,1.0), 'east', BE+.04, GF0+1.1+.5, 5.4));
+  gGround.add(placeOn(makeWindow(.8,1.0), 'east', BE+.04, GF0+1.1+.5, 7.9));
 })();
 
 /* ---------- first floor (unit B) ---------- */
@@ -766,19 +894,19 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
   const hrE = box(.06, .06, 1.5, FRAME); hrE.position.set(2.48, S1+1.05, B_FRONT-.75); gF1.add(hrE);
   const hrW = box(.06, .06, 1.5, FRAME); hrW.position.set(-.88, S1+1.05, B_FRONT-.75); gF1.add(hrW);
   gF1.add(placeOn(makeWindow(2.0,2.1,{noSill:true}), 'front', .8, S1+1.05, B_FRONT-.04));
-  /* front bedroom window */
-  gF1.add(placeOn(makeWindow(1.2,1.4), 'front', -2.7, S1+.9+.7, B_FRONT-.04));
-  /* rear windows (one is the MAMAD blast window position) */
-  gF1.add(placeOn(makeWindow(1.2,1.4), 'rear', -2.0, S1+.9+.7, B_FRONT+BD+.04));
-  gF1.add(placeOn(makeWindow(1.0,1.0), 'rear', 2.2, S1+1.0+.5, B_FRONT+BD+.04));
-  /* side windows */
-  gF1.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, S1+1.1+.5, 5.4));
-  gF1.add(placeOn(makeWindow(.8,1.0), 'east', BW/2+.04, S1+1.1+.5, 10.4));
-  gF1.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, S1+1.1+.5, 6.2));
-  gF1.add(placeOn(makeWindow(.8,1.0), 'west', -BW/2-.04, S1+1.1+.5, 10.8));
-  /* AC condensers on the east wall */
+  /* front bedroom windows (two bedrooms now) */
+  gF1.add(placeOn(makeWindow(1.2,1.4), 'front', -4.85, S1+.9+.7, B_FRONT-.04));
+  gF1.add(placeOn(makeWindow(1.2,1.4), 'front', -2.1, S1+.9+.7, B_FRONT-.04));
+  /* rear: MAMAD blast window + bath + core light */
+  gF1.add(placeOn(makeWindow(1.0,1.0), 'rear', -4.7, S1+1.0+.5, B_FRONT+BD+.04));
+  gF1.add(placeOn(makeWindow(.6,.6), 'rear', -2.3, S1+1.5+.3, B_FRONT+BD+.04));
+  gF1.add(placeOn(makeWindow(1.0,1.0), 'rear', 2.35, S1+1.0+.5, B_FRONT+BD+.04));
+  /* side windows on the drive-strip wall only — the south wall is a common wall */
+  gF1.add(placeOn(makeWindow(.8,1.0), 'east', BE+.04, S1+1.1+.5, 5.4));
+  gF1.add(placeOn(makeWindow(.8,1.0), 'east', BE+.04, S1+1.1+.5, 7.9));
+  /* AC condensers on the drive-strip wall */
   [2.1, 5.4].forEach(y=>{
-    const ac = box(.82,.62,.34,0xdfe2e6,1,.5); ac.position.set(BW/2+.22, y, 8.9); ac.rotation.y=Math.PI/2; gF1.add(edges(ac));
+    const ac = box(.82,.62,.34,0xdfe2e6,1,.5); ac.position.set(BE+.22, y, 9.2); ac.rotation.y=Math.PI/2; gF1.add(edges(ac));
   });
 })();
 
@@ -789,40 +917,40 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
   /* parapet 1.10 with coping */
   const pF = box(BW+.2, PAR-RS, .18, PLASTER2); pF.position.set(B_CX, (RS+PAR)/2, B_FRONT+.09); gRoof.add(edges(pF));
   const pR = box(BW+.2, PAR-RS, .18, PLASTER2); pR.position.set(B_CX, (RS+PAR)/2, B_FRONT+BD-.09); gRoof.add(edges(pR));
-  const pE = box(.18, PAR-RS, BD+.2, PLASTER2); pE.position.set(BW/2+.01, (RS+PAR)/2, B_CZ); gRoof.add(edges(pE));
-  const pW = box(.18, PAR-RS, BD+.2, PLASTER2); pW.position.set(-BW/2-.01, (RS+PAR)/2, B_CZ); gRoof.add(edges(pW));
+  const pE = box(.18, PAR-RS, BD+.2, PLASTER2); pE.position.set(BE+.01, (RS+PAR)/2, B_CZ); gRoof.add(edges(pE));
+  const pW = box(.18, PAR-RS, BD+.2, PLASTER2); pW.position.set(BWs-.01, (RS+PAR)/2, B_CZ); gRoof.add(edges(pW));
   [ [B_CX, B_FRONT+.09, BW+.34, .26], [B_CX, B_FRONT+BD-.09, BW+.34, .26] ].forEach(([cx,cz,w,d])=>{
     const cop = box(w, .07, d, BAND); cop.position.set(cx, PAR+.035, cz); gRoof.add(cop);
   });
-  [ [BW/2+.01], [-BW/2-.01] ].forEach(([cx])=>{
+  [ [BE+.01], [BWs-.01] ].forEach(([cx])=>{
     const cop = box(.26, .07, BD+.34, BAND); cop.position.set(cx, PAR+.035, B_CZ); gRoof.add(cop);
   });
   /* roof room (G1) at the rear-west, ~36 m^2, storey 2.80 */
   const rr = box(RR_W, RR_TOP-RS, RR_D, PLASTER); rr.position.set(RR_CX, (RS+RR_TOP)/2, RR_CZ); gRoof.add(edges(rr));
   const rrRoof = box(RR_W+.24, .14, RR_D+.24, BAND); rrRoof.position.set(RR_CX, RR_TOP+.07, RR_CZ); gRoof.add(edges(rrRoof));
   rrRoof.userData.ceil = 'roof';
-  /* roof-room openings: terrace door 0.90x2.10 + window */
-  gRoof.add(placeOn(makeDoor(.9,2.1,0x4a5568), 'front', RR_CX+1.5, RS+1.05, RR_CZ-RR_D/2-.02));
-  gRoof.add(placeOn(makeWindow(1.2,1.2), 'front', RR_CX-1.3, RS+1.7, RR_CZ-RR_D/2-.04));
-  gRoof.add(placeOn(makeWindow(1.0,1.0), 'west', RR_CX-RR_W/2-.04, RS+1.7, RR_CZ));
+  /* roof-room openings: terrace door 0.90x2.10 + windows */
+  gRoof.add(placeOn(makeDoor(.9,2.1,0x4a5568), 'front', RR_CX+1.7, RS+1.05, RR_CZ-RR_D/2-.02));
+  gRoof.add(placeOn(makeWindow(1.2,1.2), 'front', RR_CX-1.5, RS+1.7, RR_CZ-RR_D/2-.04));
+  gRoof.add(placeOn(makeWindow(1.0,1.0), 'east', RR_CX+RR_W/2+.04, RS+1.7, RR_CZ));
   /* pergola on the front-east terrace */
   const slats = new THREE.Group();
   for(let i=0;i<6;i++){
-    const s = box(2.5,.06,.12,0xb98f56); s.position.set(2.55, RS+2.32, 4.0+i*.42); slats.add(s);
+    const s = box(2.5,.06,.12,0xb98f56); s.position.set(1.7, RS+2.32, 4.0+i*.42); slats.add(s);
   }
   gRoof.add(slats);
-  [[1.45,3.9],[3.65,3.9],[1.45,6.1],[3.65,6.1]].forEach(([px,pz])=>{
+  [[0.6,3.9],[2.8,3.9],[0.6,6.1],[2.8,6.1]].forEach(([px,pz])=>{
     const post = box(.12,2.3,.12,0xb98f56); post.position.set(px, RS+1.15, pz); gRoof.add(post);
   });
-  const beam1 = box(2.5,.1,.12,0xa87f4c); beam1.position.set(2.55, RS+2.26, 3.9); gRoof.add(beam1);
-  const beam2 = box(2.5,.1,.12,0xa87f4c); beam2.position.set(2.55, RS+2.26, 6.1); gRoof.add(beam2);
+  const beam1 = box(2.5,.1,.12,0xa87f4c); beam1.position.set(1.7, RS+2.26, 3.9); gRoof.add(beam1);
+  const beam2 = box(2.5,.1,.12,0xa87f4c); beam2.position.set(1.7, RS+2.26, 6.1); gRoof.add(beam2);
   /* solar water heater + panel on the roof-room roof (dud shemesh) */
   const tank = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,1.35,14),
     new THREE.MeshStandardMaterial({color:0xe8e8e8, roughness:.4, metalness:.15}));
-  tank.rotation.z = Math.PI/2; tank.position.set(-2.4, RR_TOP+.55, RR_CZ+2.2); tank.castShadow=true;
+  tank.rotation.z = Math.PI/2; tank.position.set(-4.6, RR_TOP+.55, RR_CZ+2.2); tank.castShadow=true;
   gRoof.add(tank);
   const panel = box(1.7,.07,2.1,0x27415f,1,.3);
-  panel.rotation.x = -.5; panel.position.set(-.6, RR_TOP+.62, RR_CZ+1.2); gRoof.add(edges(panel));
+  panel.rotation.x = -.5; panel.position.set(-2.2, RR_TOP+.62, RR_CZ+1.1); gRoof.add(edges(panel));
   xreg(terr, pF, pR, pE, pW, rr, rrRoof);
 })();
 
@@ -845,12 +973,19 @@ pcar(gB1,  3.0, 5.2, -BASE_H-0.2+ .0, 0xb9bfca);
 pcar(gB1, -3.0, 12.0, -BASE_H-0.2, 0x9aa3b2);
 pcar(gB2, -3.0, 7.0, -BASE_H*2-0.4, 0xcdd3dc);
 pcar(gB2,  3.0, 10.5, -BASE_H*2-0.4, 0x8e97a8);
-/* ramp descending along the east side */
-const ramp = new THREE.Mesh(new THREE.BoxGeometry(2.8, .22, 7),
+/* ramp descending in the side strip between the east wall and the plot line */
+const ramp = new THREE.Mesh(new THREE.BoxGeometry(2.2, .22, 7),
   new THREE.MeshStandardMaterial({color:0x8b96ad, roughness:.8}));
 ramp.rotation.x = Math.atan2(BASE_H+.2, 6.5);
-ramp.position.set(4.6, -BASE_H/2+.45, 3.9);
+ramp.position.set(5.25, -BASE_H/2+.45, 3.9);
 gB1.add(ramp);
+/* raised curbs guarding both ramp edges */
+[-1.03, 1.03].forEach(dx=>{
+  const curb = box(.14, .16, 7, 0xcfc9bb, 1, .7); curb.castShadow = false;
+  curb.rotation.x = ramp.rotation.x;
+  curb.position.set(5.25+dx, -BASE_H/2+.45+.16, 3.9);
+  gB1.add(curb);
+});
 
 /* ================= interiors: rooms, cores, furniture, foundations =================
    Program (matches the rights report): stacked MAMADs, stacked wet rooms,
@@ -883,7 +1018,7 @@ function rlabel(g, x, y, z, text, size=1.0, color='#ffe9b0'){
 }
 function shaftSeg(g, y0, y1){
   const s = box(1.05, y1-y0, 1.05, 0x9fc6e8, .28, .4); s.castShadow = false;
-  s.position.set(3.5, (y0+y1)/2, 12.0); g.add(edges(s));
+  s.position.set(2.95, (y0+y1)/2, 12.55); g.add(edges(s));
 }
 function stallMark(g, x, z, y){
   [[x-1.25, z, .06, 5.0],[x+1.25, z, .06, 5.0],[x, z+2.5, 2.56, .06]].forEach(([mx,mz,w,d])=>{
@@ -893,97 +1028,106 @@ function stallMark(g, x, z, y){
 }
 const MAMAD_C = 0xcdd2d8;   /* reinforced-concrete grey */
 
-/* ---------- ground floor: unit A entry level ---------- */
+/* ---------- ground floor: unit A entry level (net ~75 m²) ----------
+   Rear service band, west→east: MAMAD 3.35m · guest WC 1.45m · stair down 1.2m ·
+   garden hall 1.5m · common core 2.4m. The whole front 6.85m is one open living space. */
 (function(){
   const g = gGround, f = GF0, c = GF1;
-  /* rear service band */
-  part(g,-4.1,9.6,-1.1,9.6,f,c,.25,MAMAD_C);       /* mamad front wall */
-  part(g,-1.1,9.6,-1.1,12.6,f,c,.25,MAMAD_C);      /* mamad side wall */
-  part(g,-0.98,9.6,0.1,9.6,f,c,.12);
-  part(g,0.1,9.6,0.1,12.6,f,c,.1);                 /* A-stair / WC divider */
-  part(g,1.9,9.6,1.9,12.6,f,c,.1);                 /* core wall */
-  part(g,2.7,9.6,4.1,9.6,f,c,.12);
-  part(g,0.1,11.1,1.9,11.1,f,c,.1);                /* guest WC */
+  /* rear service band walls */
+  part(g,-6.35,9.85,-3.0,9.85,f,c,.25,MAMAD_C);    /* mamad front wall */
+  part(g,-3.0,9.85,-3.0,13.2,f,c,.25,MAMAD_C);     /* mamad side wall */
+  part(g,-2.75,9.85,1.15,9.85,f,c,.12);
+  part(g,-1.55,9.85,-1.55,13.2,f,c,.1);            /* WC / stair divider */
+  part(g,-0.35,9.85,-0.35,13.2,f,c,.1);            /* stair / garden-hall divider */
+  part(g,1.15,8.6,1.15,13.2,f,c,.1);               /* core west wall */
+  part(g,1.15,8.6,3.55,8.6,f,c,.12);               /* core front wall */
   /* unit A internal stair down to basement −1 */
-  stairsRun(g,-0.5,9.8,1.0,11,-.29,.25,f);
+  stairsRun(g,-0.95,10.0,1.1,11,-.29,.27,f);
   /* common core: stair up + prepared lift shaft */
-  stairsRun(g,2.45,9.75,.95,12,.27,.23,f);
+  stairsRun(g,1.75,8.85,1.1,12,.27,.25,f);
   shaftSeg(g,f,c);
-  /* kitchen along the west wall + island */
-  furn(g,-3.68,f,5.5,.62,.9,3.0,0xdfe3e6);
-  furn(g,-3.68,f,7.4,.65,1.85,.65,0xd7dade);       /* fridge */
-  furn(g,-2.35,f,5.5,1.5,.9,.7,0xe9e4d8);          /* island */
+  /* kitchen along the south common wall + island */
+  furn(g,-6.02,f,5.6,.62,.9,3.2,0xdfe3e6);
+  furn(g,-6.0,f,7.7,.65,1.85,.65,0xd7dade);        /* fridge */
+  furn(g,-4.55,f,5.6,1.5,.9,.7,0xe9e4d8);          /* island */
   /* living + dining */
-  furn(g,2.25,f,6.2,.85,.62,2.2,0x8fa3b8);
-  furn(g,1.35,f,5.45,1.5,.62,.8,0x8fa3b8);
-  furn(g,1.2,f,6.5,.8,.34,.8,0xb9a98e);
-  furn(g,-0.9,f,8.35,1.5,.72,.85,0x9a7b52);
-  [[-1.55,7.8],[-0.25,7.8],[-1.55,8.9],[-0.25,8.9]].forEach(([cx,cz])=> furn(g,cx,f,cz,.38,.45,.38,0x7c6242));
-  furn(g,-0.4,f,3.4,1.6,.45,.32,0x4a4f57);         /* tv console */
+  furn(g,2.9,f,6.5,.85,.62,2.4,0x8fa3b8);
+  furn(g,1.9,f,5.55,1.6,.62,.85,0x8fa3b8);
+  furn(g,1.7,f,6.8,.8,.34,.8,0xb9a98e);
+  furn(g,-2.9,f,8.5,1.6,.72,.9,0x9a7b52);
+  [[-3.6,7.9],[-2.2,7.9],[-3.6,9.1],[-2.2,9.1]].forEach(([cx,cz])=> furn(g,cx,f,cz,.38,.45,.38,0x7c6242));
+  furn(g,-0.3,f,3.42,1.7,.45,.32,0x4a4f57);        /* tv console */
   /* mamad as study, guest WC fixtures */
-  furn(g,-2.5,f,11.9,1.6,.55,.9,0xb7c3d3);
-  furn(g,-3.7,f,10.5,.55,.72,1.3,0xc9b58e);
-  furn(g,1.45,f,10.55,.4,.42,.55,0xf4f6f7);
-  furn(g,0.5,f,10.7,.45,.8,.35,0xe8ebee);
+  furn(g,-5.45,f,12.4,1.6,.55,.9,0xb7c3d3);
+  furn(g,-6.0,f,10.7,.55,.72,1.3,0xc9b58e);
+  furn(g,-2.3,f,12.6,.4,.42,.55,0xf4f6f7);
+  furn(g,-2.3,f,10.4,.45,.8,.35,0xe8ebee);
   /* labels */
-  rlabel(g,-0.9,f+1.9,6.0,'סלון · פינת אוכל · מטבח ~31 מ״ר',1.2,'#9fe3d1');
-  rlabel(g,-2.6,f+1.8,11.1,'ממ״ד 9 מ״ר (חדר עבודה)',1.0,'#ffc9c9');
-  rlabel(g,1.0,f+1.55,10.4,'שירותי אורחים',0.85);
-  rlabel(g,-0.5,f+1.85,11.5,'מדרגות פנימיות ↓ למרתף',0.9,'#9fd3f5');
-  rlabel(g,3.0,f+2.1,11.0,'גרעין משותף + פיר מעלית (הכנה)',0.95,'#c5cff0');
+  rlabel(g,-1.4,f+1.9,6.3,'סלון · פינת אוכל · מטבח ~38 מ״ר',1.2,'#9fe3d1');
+  rlabel(g,-4.65,f+1.8,11.5,'ממ״ד 9 מ״ר (חדר עבודה)',1.0,'#ffc9c9');
+  rlabel(g,-2.3,f+1.55,11.5,'שירותי אורחים',0.8);
+  rlabel(g,-0.95,f+1.85,11.6,'מדרגות ↓ למרתף',0.8,'#9fd3f5');
+  rlabel(g,0.4,f+1.5,12.4,'מסדרון לגינה',0.7);
+  rlabel(g,2.35,f+2.1,10.6,'גרעין משותף + פיר מעלית (הכנה)',0.95,'#c5cff0');
 })();
 
-/* ---------- first floor: unit B entry level ---------- */
+/* ---------- first floor: unit B entry level (net ~75 m², 2 bedrooms + MAMAD) ---------- */
 (function(){
   const g = gF1, f = S1, c = F1TOP;
-  part(g,-4.1,9.6,-1.1,9.6,f,c,.25,MAMAD_C);       /* mamad stacked above A's */
-  part(g,-1.1,9.6,-1.1,12.6,f,c,.25,MAMAD_C);
-  part(g,-0.98,9.6,0.1,9.6,f,c,.12);
-  part(g,0.1,9.6,0.1,12.6,f,c,.1);
-  part(g,1.9,9.6,1.9,12.6,f,c,.1);
-  part(g,2.7,9.6,4.1,9.6,f,c,.12);
-  part(g,0.1,11.1,1.9,11.1,f,c,.1);                /* bath, stacked over the WC */
-  /* bedroom, front-west */
-  part(g,-1.3,3.0,-1.3,6.4,f,c,.1);
-  part(g,-4.1,6.4,-1.3,6.4,f,c,.1);
+  /* rear service band, stacked exactly over the ground floor's */
+  part(g,-6.35,9.85,-3.0,9.85,f,c,.25,MAMAD_C);
+  part(g,-3.0,9.85,-3.0,13.2,f,c,.25,MAMAD_C);
+  part(g,-2.75,9.85,1.15,9.85,f,c,.12);
+  part(g,-1.55,9.85,-1.55,13.2,f,c,.1);            /* bath over the WC — stacked plumbing */
+  part(g,-0.35,9.85,-0.35,13.2,f,c,.1);
+  part(g,1.15,8.6,1.15,13.2,f,c,.1);
+  part(g,1.15,8.6,3.55,8.6,f,c,.12);
+  /* two front bedrooms */
+  part(g,-6.35,6.6,-0.85,6.6,f,c,.1);
+  part(g,-3.35,3.0,-3.35,6.6,f,c,.1);
+  part(g,-0.85,3.0,-0.85,6.6,f,c,.1);
   /* unit B internal stair up to the roof storey */
-  stairsRun(g,-0.5,9.75,1.0,12,.27,.23,f);
+  stairsRun(g,-0.95,10.0,1.1,12,.27,.25,f);
   shaftSeg(g,f,c);
   /* furniture */
-  furn(g,-2.7,f,4.75,1.65,.55,2.0,0xf0f0f2);
-  furn(g,-2.7,f,3.62,1.75,.9,.14,0xb98f6a);
-  [[-3.62,3.85],[-1.8,3.85]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
-  furn(g,-3.78,f,5.7,.55,1.95,1.2,0xd9d4c8);       /* wardrobe */
-  furn(g,2.3,f,7.4,.85,.62,2.1,0xc0876a);
-  furn(g,1.0,f,8.5,1.4,.72,.8,0x9a7b52);
-  furn(g,0.55,f,9.25,2.6,.9,.6,0xdfe3e6);          /* kitchen run */
-  furn(g,1.45,f,10.55,.4,.42,.55,0xf4f6f7);
-  furn(g,0.5,f,10.7,.45,.8,.35,0xe8ebee);
-  furn(g,-2.5,f,11.9,1.5,.55,.95,0xf0f0f2);        /* mamad as bedroom */
+  furn(g,-4.85,f,5.0,1.65,.55,2.0,0xf0f0f2);       /* bedroom 1 */
+  furn(g,-4.85,f,3.85,1.75,.9,.14,0xb98f6a);
+  [[-5.75,4.1],[-3.95,4.1]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
+  furn(g,-6.0,f,5.9,.55,1.95,1.2,0xd9d4c8);
+  furn(g,-2.4,f,4.6,1.05,.5,1.95,0xf0f0f2);        /* bedroom 2 */
+  furn(g,-1.25,f,3.7,.5,.72,1.1,0xc9b58e);
+  furn(g,2.9,f,7.6,.85,.62,2.2,0xc0876a);          /* living */
+  furn(g,1.2,f,8.6,1.4,.72,.85,0x9a7b52);
+  furn(g,-0.2,f,9.5,3.0,.9,.6,0xdfe3e6);           /* kitchen run on the band wall */
+  furn(g,-2.3,f,12.6,.4,.42,.55,0xf4f6f7);
+  furn(g,-2.3,f,10.4,.45,.8,.35,0xe8ebee);
+  furn(g,-4.7,f,12.25,1.5,.55,.95,0xf0f0f2);       /* mamad as bedroom */
   /* labels */
-  rlabel(g,1.0,f+1.9,6.4,'סלון · מטבח ~29 מ״ר',1.15,'#a9c2f5');
-  rlabel(g,-2.7,f+1.8,4.8,'חדר שינה 11 מ״ר',0.95,'#a9c2f5');
-  rlabel(g,-2.6,f+1.8,11.1,'ממ״ד — חדר שינה 9 מ״ר',0.95,'#ffc9c9');
-  rlabel(g,1.0,f+1.55,10.4,'רחצה + שירותים',0.85);
-  rlabel(g,-0.5,f+1.85,11.5,'מדרגות ↑ לקומת הגג',0.9,'#9fd3f5');
+  rlabel(g,1.3,f+1.9,7.4,'סלון · מטבח ~30 מ״ר',1.15,'#a9c2f5');
+  rlabel(g,-4.85,f+1.8,4.8,'חדר שינה 10.5 מ״ר',0.9,'#a9c2f5');
+  rlabel(g,-2.1,f+1.8,4.8,'חדר שינה 8.5 מ״ר',0.85,'#a9c2f5');
+  rlabel(g,-4.65,f+1.8,11.5,'ממ״ד — חדר שינה 9 מ״ר',0.9,'#ffc9c9');
+  rlabel(g,-2.3,f+1.55,11.5,'רחצה + שירותים',0.8);
+  rlabel(g,-0.95,f+1.85,11.6,'מדרגות ↑ לגג',0.8,'#9fd3f5');
 })();
 
-/* ---------- roof storey: parents' suite ---------- */
+/* ---------- roof storey: parents' suite ~39.6 m² ---------- */
 (function(){
   const g = gRoof, f = RS;
-  part(g,-1.2,6.1,-1.2,8.1,f,f+2.5,.1);
-  part(g,-4.05,8.1,-1.2,8.1,f,f+2.5,.1);
-  furn(g,-2.45,f,10.6,1.8,.55,2.05,0xf0eef2);
-  furn(g,-2.45,f,9.55,1.9,.9,.14,0xb98f6a);
-  furn(g,-3.3,f,6.9,.75,.55,1.5,0xf6f8f9);         /* freestanding tub */
-  furn(g,-1.75,f,7.6,.45,.8,.35,0xe8ebee);
-  furn(g,1.0,f,10.6,.5,1.9,1.1,0xd9d4c8);
+  /* en-suite bathroom at the front-west of the room */
+  part(g,-4.4,6.7,-4.4,9.0,f,f+2.5,.1);
+  part(g,-6.2,9.0,-4.4,9.0,f,f+2.5,.1);
+  furn(g,-3.3,f,11.8,1.8,.55,2.05,0xf0eef2);       /* king bed */
+  furn(g,-3.3,f,10.7,1.9,.9,.14,0xb98f6a);
+  furn(g,-5.6,f,7.4,.75,.55,1.5,0xf6f8f9);         /* freestanding tub */
+  furn(g,-4.9,f,8.55,.45,.8,.35,0xe8ebee);
+  furn(g,-6.0,f,11.6,.55,1.9,1.5,0xd9d4c8);        /* wardrobe */
   /* railing around the stair opening */
-  part(g,0.1,9.6,0.1,12.5,f,f+1.0,.05,0x6b7280);
-  part(g,-1.1,9.6,0.1,9.6,f,f+1.0,.05,0x6b7280);
-  rlabel(g,-2.3,f+1.9,10.5,'סוויטת הורים 16 מ״ר',1.0,'#e2c2f7');
-  rlabel(g,-2.6,f+1.6,7.1,'רחצת הורים',0.85,'#e2c2f7');
-  rlabel(g,2.6,f+1.5,5.2,'מרפסת גג ~40 מ״ר + פרגולה',0.95,'#ffe9b0');
+  part(g,-0.3,9.9,-0.3,13.1,f,f+1.0,.05,0x6b7280);
+  part(g,-1.6,9.9,-0.3,9.9,f,f+1.0,.05,0x6b7280);
+  rlabel(g,-3.3,f+1.9,11.3,'סוויטת הורים ~20 מ״ר',1.0,'#e2c2f7');
+  rlabel(g,-5.3,f+1.6,7.8,'רחצת הורים',0.8,'#e2c2f7');
+  rlabel(g,1.6,f+1.5,5.3,'מרפסת גג ~55 מ״ר + פרגולה',0.95,'#ffe9b0');
 })();
 
 /* ---------- basement −1: parking, storage, unit A bedrooms ---------- */
@@ -998,7 +1142,7 @@ const MAMAD_C = 0xcdd2d8;   /* reinforced-concrete grey */
   part(g,-5.5,11.7,-3.6,11.7,f,c,.1);
   part(g,-5.5,10.1,-3.6,10.1,f,c,.08);
   shaftSeg(g,f,GF0);
-  stairsRun(g,2.45,9.75,.95,11,.28,.24,f);         /* core reaches the parking level */
+  stairsRun(g,1.75,8.85,1.1,11,.28,.25,f);         /* core reaches the parking level */
   /* unit A rooms */
   furn(g,-3.6,f,16.2,1.65,.55,2.0,0xf0f0f2);
   furn(g,3.8,f,16.2,1.4,.55,1.9,0xf0f0f2);
@@ -1088,7 +1232,7 @@ function texBox(w,h,d,tex,baseColor,texFaces){
     new THREE.MeshStandardMaterial({color:0x8a7350, roughness:.95}));
   trunkP.position.set(9.6, 3.1, 8.0); trunkP.castShadow = true; nearCtx.add(trunkP);
   for(let i=0;i<8;i++){
-    const fr = box(.16,.05,2.6, 0x4c7a3e, 1, .9); fr.castShadow = false;
+    const fr = box(.16,.05,2.6, 0x3e6631, 1, .9); fr.castShadow = false;
     fr.position.set(9.6 + Math.sin(i*Math.PI/4)*1.0, 6.35, 8.0 + Math.cos(i*Math.PI/4)*1.0);
     fr.rotation.order = 'YXZ'; fr.rotation.y = i*Math.PI/4; fr.rotation.x = .38;
     nearCtx.add(fr);
@@ -1139,6 +1283,67 @@ function picketRun(x0,z0,x1,z1){
   /* white picket fence: boundary with the plot + no. 12's frontage */
   picketRun(-6.55, .3, -6.55, 19.4);
   picketRun(-16.4, .3, -7.4, .3);
+  /* street gate: two dark-grey steel leaves breaking the picket fence */
+  const g12a = box(.92,1.62,.06, 0x4a4e54, 1, .5); g12a.position.set(-8.95, .81, .3); nearCtx.add(edges(g12a));
+  const g12b = box(.92,1.62,.06, 0x3f434a, 1, .5); g12b.position.set(-9.9, .81, .3); nearCtx.add(edges(g12b));
+  /* mailbox cluster + intercom by the gate */
+  const mail12 = new THREE.Mesh(new THREE.BoxGeometry(.72,.55,.1),
+    new THREE.MeshStandardMaterial({map:texMail, roughness:.55, metalness:.25}));
+  mail12.position.set(-8.15, .95, .32); nearCtx.add(mail12);
+  const ic12 = box(.14,.22,.05, 0x9aa0a6, 1, .4); ic12.castShadow = false;
+  ic12.position.set(-8.55, 1.25, .33); nearCtx.add(ic12);
+  /* burglar bars on the ground-floor windows */
+  [[-13.6, 1.85],[-10.2, 4.95]].forEach(([wx,wy],wi)=>{
+    if(wi===0) [-.45,-.15,.15,.45].forEach(dx=>{
+      const bar = box(.035,1.34,.035, 0x3c4147, 1, .5); bar.castShadow = false;
+      bar.position.set(wx+dx, wy, .52); nearCtx.add(bar);
+    });
+  });
+  /* rolling-shutter boxes over the upper openings */
+  [[-10.2, 5.72]].forEach(([sx,sy])=>{
+    const sb = box(1.62,.3,.2, 0xdcdfe2, 1, .6); sb.position.set(sx, sy, .5); nearCtx.add(edges(sb));
+  });
+  /* drainpipe down the street facade */
+  const dp12 = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,6.1,8),
+    new THREE.MeshStandardMaterial({color:0xd8d5cc, roughness:.7}));
+  dp12.position.set(-16.15, 3.1, .48); nearCtx.add(dp12);
+  /* darker plinth band along the base of the street facade */
+  const plinth12 = box(9.06,.5,.08, 0xd6cfc0, 1, .85); plinth12.castShadow = false;
+  plinth12.position.set(-11.9, .25, .52); nearCtx.add(plinth12);
+  /* AC condenser + drip streak on the street wall */
+  const ac12s = box(.8,.55,.3, 0xe3e6e9, 1, .5); ac12s.position.set(-14.9, 2.35, .68); nearCtx.add(edges(ac12s));
+  const drip = box(.1,1.8,.02, 0xc9c2b2, 1, .95); drip.castShadow = false;
+  drip.position.set(-14.9, 1.0, .515); nearCtx.add(drip);
+  /* small frosted bathroom window near the corner */
+  nearCtx.add(placeOn(makeWindow(.6,.6), 'front', -8.35, 2.3, .44));
+})();
+/* scooter leaning by no. 12's fence + the sidewalk ficus beside it */
+function makeScooter(){
+  const g = new THREE.Group();
+  const deck = box(.24,.07,.62, 0x2c2f33, 1, .6); deck.position.y = .32; g.add(deck);
+  const body = box(.26,.3,.55, 0x35393e, 1, .5); body.position.set(0,.5,.18); g.add(body);
+  const seat = box(.28,.11,.55, 0x1e2124, 1, .7); seat.position.set(0,.72,.2); g.add(seat);
+  const col = box(.06,.55,.06, 0x50555b, 1, .4); col.position.set(0,.62,-.32); col.rotation.x=.35; g.add(col);
+  const bar = box(.4,.05,.05, 0x50555b, 1, .4); bar.position.set(0,.88,-.42); g.add(bar);
+  const shield = box(.3,.45,.04, 0x35393e, 1, .5); shield.position.set(0,.5,-.36); shield.rotation.x=.25; g.add(shield);
+  const wmat = new THREE.MeshStandardMaterial({color:0x1a1c1e, roughness:.9});
+  [[-.42],[.42]].forEach(()=>{});
+  [-.32,.42].forEach(z=>{
+    const wh = new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.09,12), wmat);
+    wh.rotation.z = Math.PI/2; wh.position.set(0,.16,z===-.32?-.42:.42); g.add(wh);
+  });
+  const mirror = box(.03,.14,.03, 0x50555b, 1, .4); mirror.position.set(.14,1.0,-.42); g.add(mirror);
+  return g;
+}
+(function(){
+  const sc = makeScooter(); sc.scale.setScalar(.85);
+  stPlace(sc, .432, .52, 0, .1);
+})();
+(function(){
+  const p = alongStreet(.405);
+  const x = p.x+Math.cos(p.ang)*1.05, z = p.z-Math.sin(p.ang)*1.05;
+  const pit = box(1.0,.04,1.0, 0x9a8a6c); pit.position.set(x,.085,z); pit.rotation.y = p.ang; gContext.add(pit);
+  tree(x, z, 1.15);
 })();
 (function(){
   const fence = box(PLOT_W, 1.9, .12, 0x3c6b4f, .95);
@@ -1163,12 +1368,36 @@ function stPlace(obj, t, off, y=0, extraRot=0){
   return obj;
 }
 const lampHeads = [], lampLights = [];
-function utilityPole(t, off, withBox=false){
+function utilityPole(t, off, withBox=false, withFlags=false){
   const p = alongStreet(t);
   const g = new THREE.Group();
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.10,.17,9.4,10),
-    new THREE.MeshStandardMaterial({color:0xb5b2aa, roughness:.9}));
+  /* weathered timber pole, like the real ones on the street */
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.09,.15,9.4,9),
+    new THREE.MeshStandardMaterial({color:0x8b7d68, roughness:.95}));
   shaft.position.y = 4.7; shaft.castShadow = true; g.add(shaft);
+  /* darker galvanised bands where hardware clamps on */
+  [2.2, 5.6, 7.9].forEach(y=>{
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(.125,.135,.07,9),
+      new THREE.MeshStandardMaterial({color:0x5d6166, roughness:.55, metalness:.35}));
+    band.castShadow = false; band.position.y = y; g.add(band);
+  });
+  /* stapled cable running down the pole face */
+  const drop = box(.035,7.6,.035, 0x2e3134, 1, .6); drop.castShadow = false;
+  drop.position.set(.1, 4.2, .06); g.add(drop);
+  if(withFlags){
+    /* the string of faded pennants tied near the top, drooping toward the lot */
+    const cols = [0xd97b2a, 0x3f8a4d, 0xd9d13e, 0xd97b2a, 0x3f8a4d, 0xc4432e];
+    for(let i=0;i<6;i++){
+      const f = (i+1)/7;
+      const fl = box(.03, .5, .34, cols[i], 1, .85); fl.castShadow = false;
+      fl.position.set(Math.sin(f*2.6)*.2, 8.6 - f*2.0 - Math.sin(f*Math.PI)*.5, .2 + f*2.6);
+      fl.rotation.x = .3 + Math.random()*.25; fl.rotation.y = (Math.random()-.5)*.7;
+      g.add(fl);
+    }
+  }
+  /* old poles never stand quite straight */
+  g.rotation.z = (Math.random()-.5)*.035;
+  g.rotation.x = (Math.random()-.5)*.02;
   /* cross-arm along the street with insulators */
   const cross = box(.09,.09,1.7, 0x8a867c); cross.position.y = 8.55; g.add(cross);
   [-.6,0,.6].forEach(dz=>{
@@ -1206,9 +1435,14 @@ function wire(a, b, sag=1.0){
   const pA = utilityPole(.16, .9);
   const pB = utilityPole(.565, .75, true);   /* the pole right in front of the plot */
   const pC = utilityPole(.86, .9);
+  /* the timber pole with the faded pennant string, at the sand-lot entrance */
+  const pD = utilityPole(.40, 8.9, false, true);
   [[pA,pB],[pB,pC]].forEach(([a,b])=>{
     [0,.22,.44].forEach((drop,i)=> wire([a[0],8.62-drop,a[1]], [b[0],8.62-drop,b[1]], .85+i*.12));
   });
+  /* cross-street span feeding the far side */
+  wire([pB[0],8.5,pB[1]], [pD[0],8.3,pD[1]], .9);
+  wire([pA[0],8.4,pA[1]], [pD[0],8.25,pD[1]], 1.0);
   /* service drops: across to no. 12's roof and over the street */
   const c12 = L2W(-8.2, 1.2);
   wire([pB[0],8.2,pB[1]], [c12[0],6.85,c12[1]], .5);
@@ -1221,9 +1455,10 @@ function tree(x,z,s=1){
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.14*s,.2*s,1.9*s,8),
     new THREE.MeshStandardMaterial({color:0x6b5136, roughness:.95}));
   trunk.position.y = .95*s; trunk.castShadow = true; t.add(trunk);
-  const leafA = new THREE.MeshStandardMaterial({color:0x4d7a3f, roughness:.95});
-  const leafB = new THREE.MeshStandardMaterial({color:0x5c8a4a, roughness:.95});
-  [[0,2.6,0,1.5],[.9,2.2,.4,1.05],[-.85,2.25,-.3,1.0],[.2,3.1,-.6,.95],[-.4,3.0,.6,.9]].forEach(([ox,oy,oz,r],i)=>{
+  const leafA = new THREE.MeshStandardMaterial({color:0x3d6831, roughness:.95});
+  const leafB = new THREE.MeshStandardMaterial({color:0x4a7a3c, roughness:.95});
+  [[0,2.6,0,1.5],[.9,2.2,.4,1.05],[-.85,2.25,-.3,1.0],[.2,3.1,-.6,.95],[-.4,3.0,.6,.9],
+   [1.55,2.55,.15,.92],[-1.5,2.6,.25,.88],[.7,2.9,1.0,.8],[-.6,2.8,-1.1,.78]].forEach(([ox,oy,oz,r],i)=>{
     const lobe = new THREE.Mesh(new THREE.SphereGeometry(r*s, 10, 8), i%2?leafA:leafB);
     lobe.position.set(ox*s, oy*s, oz*s); lobe.castShadow = true; t.add(lobe);
   });
@@ -1283,18 +1518,139 @@ tp = L2W(13, PLOT_D+5); tree(tp[0], tp[1], 1.2);
     b.castShadow = false;
     stPlace(b, t, 8.95, .425);
   }
+  /* weathered timber bench by the railing, facing the street */
+  (function(){
+    const bench = new THREE.Group();
+    const legMat = 0x3b3f43;
+    [-.7,.7].forEach(x=>{
+      const leg = box(.07,.42,.5, legMat, 1, .6); leg.position.set(x,.21,0); bench.add(leg);
+      const back = box(.07,.5,.06, legMat, 1, .6); back.position.set(x,.6,.24); back.rotation.x=-.18; bench.add(back);
+    });
+    [-.17,0,.17].forEach(z=>{
+      const slat = box(1.7,.045,.12, 0x84592f, 1, .85); slat.position.set(0,.44,z); bench.add(slat);
+    });
+    [.62,.78].forEach(y=>{
+      const slat = box(1.7,.1,.04, 0x8d6136, 1, .85); slat.position.set(0,y,.28+(y-.62)*.35); slat.rotation.x=-.18; bench.add(slat);
+    });
+    stPlace(bench, .565, 9.7, 0, Math.PI);
+  })();
+  /* green igloo recycling dome + rubbish bags dumped beside it */
+  (function(){
+    const p = alongStreet(.415);
+    const x = p.x+Math.cos(p.ang)*11.6, z = p.z-Math.sin(p.ang)*11.6;
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(.92, 14, 10, 0, Math.PI*2, 0, Math.PI/2),
+      new THREE.MeshStandardMaterial({color:0x2e7a3f, roughness:.7}));
+    dome.scale.y = .95; dome.position.set(x, .02, z); dome.castShadow = true; gContext.add(dome);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.2,.24,.14,10),
+      new THREE.MeshStandardMaterial({color:0x1d5c2c, roughness:.7}));
+    lid.position.set(x, .93, z); gContext.add(lid);
+    const slot = box(.3,.16,.05, 0x14371c, 1, .8); slot.castShadow=false;
+    slot.position.set(x, .55, z-.85); gContext.add(slot);
+    [[-1.3,.2],[-1.7,-.3],[1.4,.1]].forEach(([dx,dz],i)=>{
+      const bag = new THREE.Mesh(new THREE.SphereGeometry(.34-i*.04, 9, 7),
+        new THREE.MeshStandardMaterial({color: i?0x26292d:0x303439, roughness:.55}));
+      bag.scale.y = .72; bag.position.set(x+dx, .22, z+dz); bag.castShadow = true; gContext.add(bag);
+    });
+  })();
+  /* green tarp shade canopy deep in the lot */
+  (function(){
+    const p = alongStreet(.30);
+    const cx = p.x+Math.cos(p.ang)*16.5, cz = p.z-Math.sin(p.ang)*16.5;
+    [[-2.1,-1.6],[2.1,-1.6],[-2.1,1.6],[2.1,1.6]].forEach(([dx,dz])=>{
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,2.5,8),
+        new THREE.MeshStandardMaterial({color:0x7d8288, roughness:.6}));
+      post.position.set(cx+dx, 1.25, cz+dz); gContext.add(post);
+    });
+    const sheet = box(4.8,.06,3.7, 0x3e6b46, 1, .85);
+    sheet.position.set(cx, 2.52, cz); sheet.rotation.z = .04; sheet.rotation.y = p.ang;
+    gContext.add(sheet);
+  })();
+  /* low white masonry wall fronting the CSONK house */
+  const fw = box(6.8,.72,.18, 0xeceadd, 1, .85);
+  stPlace(fw, .675, 11.1, .36);
+  /* red-tile-roofed old houses behind the far side, as in the photos */
+  function tileHouse(t, off, w, d, rotExtra=0){
+    const hg2 = new THREE.Group();
+    const body = box(w, 2.9, d, 0xe3ddcf); body.position.y = 1.45; hg2.add(edges(body));
+    const roofMat = new THREE.MeshStandardMaterial({color:0xa5563c, roughness:.85});
+    [-1,1].forEach(sgn=>{
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(w+.5, .08, d/2+.35), roofMat);
+      slab.position.set(0, 3.42, sgn*(d/4+.02));
+      slab.rotation.x = -sgn*.42;
+      slab.castShadow = true; hg2.add(slab);
+    });
+    const gutterLine = box(w+.4,.1,.1, 0x8d8a80); gutterLine.castShadow=false;
+    gutterLine.position.set(0, 2.95, d/2+.12); hg2.add(gutterLine);
+    stPlace(hg2, t, off, 0, rotExtra);
+  }
+  tileHouse(.12, 17.5, 7.5, 6.5, .15);
+  tileHouse(.79, 16.8, 8, 7, -.1);
+  tileHouse(.93, 13.5, 6.5, 6, .2);
+  /* scattered junk in the sand: crates, a pallet, an old tyre */
+  [[.24,15.2,.9,.5,.7,0x8f8267],[.27,14.1,.7,.4,.5,0x6e6553],[.44,15.8,1.1,.14,.9,0x9a8a6c]].forEach(([t,off,w,h,d,col])=>{
+    const j = box(w,h,d,col,1,.9); stPlace(j, t, off, h/2, Math.random());
+  });
+  (function(){
+    const tyre = new THREE.Mesh(new THREE.CylinderGeometry(.31,.31,.2,14),
+      new THREE.MeshStandardMaterial({color:0x1e2022, roughness:.95}));
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.21,10),
+      new THREE.MeshStandardMaterial({color:0xd6cfbf, roughness:.9}));
+    const p = alongStreet(.46);
+    const x = p.x+Math.cos(p.ang)*14.6, z = p.z-Math.sin(p.ang)*14.6;
+    tyre.position.set(x,.12,z); hub.position.set(x,.125,z);
+    gContext.add(tyre); gContext.add(hub);
+  })();
+})();
+/* distant building masses closing both ends of the street, so views down the road
+   don't fall off the edge of the world */
+(function(){
+  const DIST = [
+    [.015, -4.5, 9, 6.5, 7, 0xe8e2d4], [.05, -5.5, 7, 3.4, 8, 0xded7c6],
+    [.02, 13.5, 8, 5.8, 7, 0xe2dccc], [.06, 15.5, 7, 3.2, 6, 0xd6cfbf],
+    [.965, -5, 8, 6.2, 7, 0xe6e0d2], [.93, -6, 7, 3.6, 8, 0xdad3c3],
+    [.975, 13, 9, 5.4, 8, 0xdfd8c8],
+  ];
+  DIST.forEach(([t, off, w, h, d, col])=>{
+    const b = edges(box(w, h, d, col));
+    stPlace(b, t, off, h/2, (Math.random()-.5)*.2);
+    const par = box(w+.2, .25, d+.2, 0xcfc8b8); par.castShadow = false;
+    stPlace(par, t, off, h+.12, b.rotation.y - alongStreet(t).ang);
+  });
 })();
 
-/* ---------- vehicles ---------- */
+/* ---------- vehicles (front = +z) ---------- */
 function carMesh(col, len=4.25, ht=1.45){
   const c = new THREE.Group();
   const body = box(1.72, ht*.42, len, col, 1, .45); body.position.y = .3+ht*.21; c.add(edges(body));
   const cab = box(1.62, ht*.38, len*.52, col, 1, .4); cab.position.set(0, .3+ht*.58, -len*.04); c.add(edges(cab));
+  /* glazing band poking through the cabin on all four sides */
+  const band = new THREE.Mesh(new THREE.BoxGeometry(1.66, ht*.24, len*.54),
+    new THREE.MeshStandardMaterial({color:0x8fb2c6, roughness:.15, metalness:.35}));
+  band.position.set(0, .3+ht*.62, -len*.04); band.castShadow = false; c.add(band);
+  /* bumpers, lights, front plate */
+  const bmat = new THREE.MeshStandardMaterial({color:0x2c2f33, roughness:.6});
+  [len/2, -len/2].forEach(zz=>{
+    const b = new THREE.Mesh(new THREE.BoxGeometry(1.74,.16,.14), bmat);
+    b.position.set(0,.34,zz); b.castShadow = false; c.add(b);
+  });
+  [-.55,.55].forEach(x=>{
+    const hl = box(.26,.09,.04, 0xf5ecc9, 1, .3); hl.castShadow=false; hl.position.set(x, .3+ht*.34, len/2+.005); c.add(hl);
+    const tl = box(.24,.09,.04, 0xb03028, 1, .4); tl.castShadow=false; tl.position.set(x, .3+ht*.34, -len/2-.005); c.add(tl);
+  });
+  const plate = box(.34,.12,.03, 0xe8d24a, 1, .5); plate.castShadow=false; plate.position.set(0,.55,len/2+.01); c.add(plate);
+  /* side mirrors */
+  [-.87,.87].forEach(x=>{
+    const mr = box(.05,.09,.15, col, 1, .45); mr.castShadow=false;
+    mr.position.set(x, .3+ht*.60, len*.20); c.add(mr);
+  });
   [-len*.30, len*.30].forEach(wz=>{
     [-.8,.8].forEach(wx=>{
       const wh = new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.2,14),
         new THREE.MeshStandardMaterial({color:0x24262a, roughness:.9}));
       wh.rotation.z = Math.PI/2; wh.position.set(wx, .3, wz); c.add(wh);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.215,10),
+        new THREE.MeshStandardMaterial({color:0x9aa0a6, roughness:.4, metalness:.5}));
+      cap.rotation.z = Math.PI/2; cap.position.set(wx, .3, wz); cap.castShadow=false; c.add(cap);
     });
   });
   return c;
@@ -1307,6 +1663,13 @@ function makePickup(){
   const cab = box(1.74,.72,1.6, 0xeceff0, 1, .5); cab.position.set(0,1.22,-.9); g.add(edges(cab));
   const hood = box(1.74,.42,1.15, 0xeceff0, 1, .5); hood.position.set(0,.92,-2.0); g.add(edges(hood));
   const stripe = box(1.82,.14,3.1, 0xb23b30); stripe.position.set(0,.78,.4); g.add(stripe);
+  const pglass = new THREE.Mesh(new THREE.BoxGeometry(1.78,.34,1.3),
+    new THREE.MeshStandardMaterial({color:0x8fb2c6, roughness:.15, metalness:.35}));
+  pglass.position.set(0,1.32,-.9); pglass.castShadow = false; g.add(pglass);
+  [-.6,.6].forEach(x=>{
+    const hl = box(.26,.1,.04, 0xf5ecc9, 1, .3); hl.castShadow=false; hl.position.set(x,.92,-2.58); g.add(hl);
+    const tl = box(.24,.1,.04, 0xb03028, 1, .4); tl.castShadow=false; tl.position.set(x,.86,2.36); g.add(tl);
+  });
   const RK = 0xc7cbd0;
   [[-.8,-1.5],[.8,-1.5],[-.8,2.2],[.8,2.2]].forEach(([x,z])=>{
     const p2 = box(.06,.95,.06, RK, 1, .4); p2.position.set(x, 1.6, z); g.add(p2);
@@ -1324,19 +1687,47 @@ function makePickup(){
   });
   return g;
 }
+/* boxy panel van for the yellow Transporter parked in the sand lot */
+function makeVan(col){
+  const g = new THREE.Group();
+  const body = box(1.88, 1.5, 4.7, col, 1, .5); body.position.set(0, 1.05, .25); g.add(edges(body));
+  const nose = box(1.84, .8, .95, col, 1, .5); nose.position.set(0, .72, -2.45); g.add(edges(nose));
+  const ws = new THREE.Mesh(new THREE.BoxGeometry(1.7, .62, .06),
+    new THREE.MeshStandardMaterial({color:0x8fb2c6, roughness:.15, metalness:.35}));
+  ws.position.set(0, 1.42, -1.95); ws.rotation.x = .3; ws.castShadow = false; g.add(ws);
+  [-.62,.62].forEach(x=>{
+    const hl = box(.24,.1,.05, 0xf5ecc9, 1, .3); hl.castShadow=false; hl.position.set(x,.72,-2.94); g.add(hl);
+  });
+  const bmp = box(1.9,.15,.12, 0x2c2f33, 1, .6); bmp.castShadow=false; bmp.position.set(0,.4,-2.96); g.add(bmp);
+  [[-.8,-1.9],[.8,-1.9],[-.8,1.7],[.8,1.7]].forEach(([x,z])=>{
+    const wh = new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,.22,14),
+      new THREE.MeshStandardMaterial({color:0x24262a, roughness:.9}));
+    wh.rotation.z = Math.PI/2; wh.position.set(x,.33,z); g.add(wh);
+  });
+  return g;
+}
 /* cars in the white-sand lot across the street (yellow van at the entrance) */
-[[.07,12.8,0xd9c53e,2.0],[.13,13.2,0xe8e9ea,1.45],[.19,12.6,0x9aa1a8,1.45],[.255,13.4,0x3a6fc4,1.42],[.31,12.7,0xdadbd8,1.45]].forEach(([t,off,col,h],i)=>{
-  stPlace(carMesh(col, h>1.8?4.9:4.25, h), t, off, 0, (i%2 ? .3 : -.18));
+stPlace(makeVan(0xd9b83a), .07, 12.9, 0, -.2);
+[[.13,13.2,0xe8e9ea,1.45],[.19,12.6,0x9aa1a8,1.45],[.255,13.4,0x3a6fc4,1.42],[.31,12.7,0xdadbd8,1.45]].forEach(([t,off,col,h],i)=>{
+  stPlace(carMesh(col, 4.25, h), t, off, 0, (i%2 ? .3 : -.18));
+});
+/* more dusty cars deeper in and along the middle rows, nose-in */
+[[.16,16.8,0xcfc9bb],[.35,17.2,0xb8b2a4]].forEach(([t,off,col])=>{
+  stPlace(carMesh(col), t, off, 0, 1.35);
+});
+[[.465,13.6,0xc9cdd1],[.525,14.4,0xdad6c9],[.578,13.1,0x9fa6ad]].forEach(([t,off,col],i)=>{
+  stPlace(carMesh(col), t, off, 0, 1.3 + (i%2?.15:-.1));
 });
 /* parked along the west curb: silver, white i10, blue hatchback */
 [[.29,0xcfd2d4],[.35,0xf2f3f2],[.405,0xe6e7e5],[.465,0x2f63c9]].forEach(([t,col])=>{
   stPlace(carMesh(col), t, 7.35);
 });
-/* east curb: the pickup right in front of the plot, more cars to the north */
-const streetPickup = stPlace(makePickup(), .555, 2.95);
-[[.67,0xf0f1ef],[.745,0xb9bfc6],[.82,0xe8e9e7]].forEach(([t,col])=>{
+/* east curb: the pickup in front of the plot (clear of the driveway), more cars north */
+const streetPickup = stPlace(makePickup(), .522, 2.95);
+[[.69,0xf0f1ef],[.755,0xb9bfc6],[.82,0xe8e9e7]].forEach(([t,col])=>{
   stPlace(carMesh(col), t, 3.0);
 });
+/* (manhole covers live with the street details in the curbstone block above) */
 
 /* ================= "before": the lot as it stands today ================= */
 const gBefore = new THREE.Group();
@@ -1384,12 +1775,12 @@ gLines.add(label('קו בניין קדמי 3 מ׳', lp2[0], 1.1, lp2[1], 1.5, '#
 lp2 = L2W(0, PLOT_D-2.4);
 gLines.add(label('קו בניין אחורי 5 מ׳', lp2[0], 1.1, lp2[1], 1.4, '#ff8a8a'));
 (function(){
-  const a = L2W(-BW/2-1.4, B_FRONT);
+  const a = L2W(BE+1.2, B_FRONT);
   const hGeo = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(a[0], 0, a[1]),
     new THREE.Vector3(a[0], PAR, a[1])]);
   gLines.add(new THREE.Line(hGeo, new THREE.LineBasicMaterial({color:0x93a0b8})));
-  const b = L2W(-BW/2-2.7, B_FRONT);
+  const b = L2W(BE+2.5, B_FRONT);
   gLines.add(label('8.0 מ׳ (מותר 8.8)', b[0], PAR/2, b[1], 1.4, '#93a0b8'));
 })();
 /* floating labels */
@@ -1397,9 +1788,9 @@ function wlabel(text, lx, y, lz, size, color){
   const p = L2W(lx, lz);
   gLabels.add(label(text, p[0], y, p[1], size, color));
 }
-wlabel('קרקע · דירה A · ~79 מ״ר', -8.3, 1.8, 7.8, 1.7, '#7fe7d2');
-wlabel('קומה א׳ · דירה B · ~79 מ״ר', -8.3, 5.0, 7.8, 1.7, '#a9c2f5');
-wlabel('קומת גג ג1 · ~36 מ״ר', -8.3, 8.6, 10.5, 1.6, '#e2c2f7');
+wlabel('קרקע · דירה A · ~101 מ״ר ברוטו', -8.6, 1.8, 7.8, 1.7, '#7fe7d2');
+wlabel('קומה א׳ · דירה B · ~101 מ״ר ברוטו', -8.6, 5.0, 7.8, 1.7, '#a9c2f5');
+wlabel('קומת גג ג1 · ~40 מ״ר', -8.6, 8.6, 10.5, 1.6, '#e2c2f7');
 wlabel('מרתף −1 · חניה · ~197 מ״ר', -8.3, -1.6, 9, 1.5, '#b7c5df');
 wlabel('מרתף −2 · חניה · ~197 מ״ר', -8.3, -4.7, 9, 1.5, '#9fb0cc');
 gLabels.add(label('רחוב חובות הלבבות', -12, .9, -5.2, 1.7, '#aab6cf'));
@@ -1426,21 +1817,21 @@ function dimLine(a, b, txt, color=0xffb020, tcol='#ffd166', ts=1.55){
   a=L2W(-PLOT_W/2-1.2,0); b=L2W(-PLOT_W/2-1.2,PLOT_D);
   dimLine([a[0],.25,a[1]],[b[0],.25,b[1]],'עומק מגרש 19.40 מ׳');
   /* building footprint */
-  a=L2W(-BW/2,B_FRONT-.9); b=L2W(BW/2,B_FRONT-.9);
-  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'רוחב בניין 8.20 מ׳',0x2ec4a6,'#7fe7d2');
-  a=L2W(-BW/2-.9,B_FRONT); b=L2W(-BW/2-.9,B_FRONT+BD);
-  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'עומק בניין 9.60 מ׳',0x2ec4a6,'#7fe7d2');
+  a=L2W(BWs,B_FRONT-.9); b=L2W(BE,B_FRONT-.9);
+  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'רוחב בניין 9.90 מ׳',0x2ec4a6,'#7fe7d2');
+  a=L2W(BE+.9,B_FRONT); b=L2W(BE+.9,B_FRONT+BD);
+  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'עומק בניין 10.20 מ׳',0x2ec4a6,'#7fe7d2');
   /* setbacks */
-  a=L2W(4.9,0); b=L2W(4.9,B_FRONT);
+  a=L2W(5.4,0); b=L2W(5.4,B_FRONT);
   dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'קו בניין קדמי 3.00 מ׳',0xff6b6b,'#ff9a9a',1.35);
   a=L2W(0,B_FRONT+BD); b=L2W(0,PLOT_D);
-  dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'מרווח אחורי 6.80 מ׳ (מינ׳ 5)',0xff6b6b,'#ff9a9a',1.35);
+  dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'מרווח אחורי 6.20 מ׳ (מינ׳ 5)',0xff6b6b,'#ff9a9a',1.35);
   /* heights */
-  p=L2W(-BW/2-.7,B_FRONT-.7);
+  p=L2W(BE+.7,B_FRONT-.7);
   dimLine([p[0],0,p[1]],[p[0],PAR,p[1]],'גובה מעקה 7.95 מ׳ (מותר 8.8)',0x93a0b8,'#c6d0e2',1.45);
-  p=L2W(RR_CX-RR_W/2-.8,RR_CZ);
+  p=L2W(RR_CX+RR_W/2+.8,RR_CZ);
   dimLine([p[0],RS,p[1]],[p[0],RR_TOP,p[1]],'חדר גג עד 9.65 מ׳',0xc98bf0,'#e2c2f7',1.35);
-  p=L2W(BW/2+.7,B_FRONT+BD+.7);
+  p=L2W(BE+.7,B_FRONT+BD+.7);
   dimLine([p[0],GF0,p[1]],[p[0],S1,p[1]],'קומה טיפוסית 3.35 מ׳',0x93a0b8,'#c6d0e2',1.3);
 })();
 
@@ -1536,9 +1927,9 @@ function updateSky(){
   scene.background = sky;
   scene.fog.color.copy(sky.clone().lerp(new THREE.Color(0xffffff), .05));
   sun.position.set(Math.cos(th) * 42, Math.max(alt, .02) * 46 + 2, -24);
-  sun.intensity = 1.25 * clamp01(alt * 2.2);
+  sun.intensity = 1.32 * clamp01(alt * 2.2);
   sun.color.copy(new THREE.Color(0xffa95e).lerp(new THREE.Color(0xfff1da), clamp01(alt * 3)));
-  hemi.intensity = .13 + .82 * dayF;
+  hemi.intensity = .12 + .72 * dayF;
   /* the sun drops → street lamps and windows switch on */
   const lampsOn = alt < .12;
   lampLights.forEach(l => l.intensity = lampsOn ? 2.4 : 0);
@@ -1613,7 +2004,7 @@ const simCar = carMesh(0x2b4f9e);
 [-.55, .55].forEach(x=>{
   const h = box(.18, .1, .05, 0xfff3cd, 1, .3);
   h.material.emissive = new THREE.Color(0xffedb0); h.material.emissiveIntensity = .8;
-  h.position.set(x, .62, -2.1); simCar.add(h);
+  h.position.set(x, .79, 2.14); simCar.add(h);
 });
 simCar.visible = false; scene.add(simCar);
 function makePerson(){
@@ -1627,12 +2018,14 @@ function makePerson(){
   return g;
 }
 const person = makePerson(); person.visible = false; scene.add(person);
-/* car: along the street → through the sliding gate → down the ramp → into stall */
+/* car: cruise past the parked pickup → swing into the gate → down the side ramp → stall.
+   Ramp axis x=5.2 clears the ground-floor east wall (x=4.1) by a full car margin. */
 const carPath = makePath([
-  spw(.20, 5.2), spw(.34, 5.2), spw(.44, 5.2), spw(.50, 4.4), spw(.545, 3.1),
-  lpw(4.6, .05, -1.2), lpw(4.6, .05, .7),
-  lpw(4.6, -2.7, 7.3), lpw(4.6, -3.2, 9.9),
-  lpw(3.4, -3.2, 10.9), lpw(3.0, -3.2, 12.4),
+  spw(.20, 5.2), spw(.34, 5.2), spw(.46, 5.2), spw(.55, 5.15), spw(.588, 5.0),
+  spw(.606, 4.1), spw(.617, 2.6), spw(.6225, 1.2),
+  lpw(5.2, .05, -.45), lpw(5.2, .05, .7),
+  lpw(5.2, -2.7, 7.3), lpw(5.2, -3.2, 9.9),
+  lpw(3.6, -3.2, 11.0), lpw(3.0, -3.2, 12.4),
 ]);
 /* resident: along the sidewalk → through the garden gate → front door */
 const walkPath = makePath([
@@ -1659,7 +2052,7 @@ function updateSim(dt){
     const actor = sim.type === 'car' ? simCar : person;
     if(sim.d < path.length){
       const v = sim.type === 'car'
-        ? (sim.d < path.wp[4] ? 5.5 : (sim.d < path.wp[7] ? 2.4 : 1.7))
+        ? (sim.d < path.wp[4] ? 5.5 : (sim.d < path.wp[10] ? 2.4 : 1.7))
         : 1.5;
       sim.d += v*dt;
       const p = path.at(sim.d);
@@ -1689,10 +2082,10 @@ function updateSim(dt){
     }
   }
   /* gates, door and the see-through ground ease toward their targets */
-  const wantV = sim && sim.type === 'car' && sim.d > carPath.wp[5]-7 && sim.hold < .6;
+  const wantV = sim && sim.type === 'car' && sim.d > carPath.wp[8]-7 && sim.hold < .6;
   const wantP = sim && sim.type === 'walk' && sim.d > walkPath.wp[2]-1.6 && sim.hold < .4;
   const wantD = sim && sim.type === 'walk' && sim.d > walkPath.wp[5]-1.6 && sim.hold < .4;
-  const wantF = sim && sim.type === 'car' && sim.d > carPath.wp[6]-1.5 && sim.hold < 1.4;
+  const wantF = sim && sim.type === 'car' && sim.d > carPath.wp[9]-1.5 && sim.hold < 1.4;
   vGateOpen += ((wantV?1:0) - vGateOpen)*Math.min(1, dt*2.4);
   pedOpen  += ((wantP?1:0) - pedOpen)*Math.min(1, dt*3.2);
   doorOpen += ((wantD?1:0) - doorOpen)*Math.min(1, dt*3.4);
