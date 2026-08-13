@@ -865,15 +865,32 @@ function xreg(...meshes){
 }
 let mainDoorLeaf = null;   /* animated by the entry simulation */
 
+/* four thin perimeter wall slabs — a hollow shell, so floor plans read with SOLID
+   walls while the top-down view still sees the rooms inside */
+function hollowWalls(g, cx, cz, w, d, y0, y1, color, th=.25){
+  const mk = (ww, dd, px, pz) => {
+    const m = box(ww, y1-y0, dd, color);
+    m.position.set(px, (y0+y1)/2, pz);
+    g.add(edges(m));
+    return m;
+  };
+  return [
+    mk(w, th, cx, cz - d/2 + th/2),
+    mk(w, th, cx, cz + d/2 - th/2),
+    mk(th, d - 2*th, cx - w/2 + th/2, cz),
+    mk(th, d - 2*th, cx + w/2 - th/2, cz),
+  ];
+}
+
 /* ---------- ground floor (unit A) ---------- */
 (function(){
   /* plinth + walls */
   const plinth = box(BW+.16, .55, BD+.16, PLINTH); plinth.position.set(B_CX, .275, B_CZ); gGround.add(edges(plinth));
-  const walls = box(BW, GF1-GF0, BD, PLASTER); walls.position.set(B_CX, (GF0+GF1)/2, B_CZ); gGround.add(edges(walls));
+  const walls = hollowWalls(gGround, B_CX, B_CZ, BW, BD, GF0, GF1, PLASTER);
   /* slab band above GF */
   const slab = box(BW+.2, S1-GF1, BD+.2, BAND); slab.position.set(B_CX, (GF1+S1)/2, B_CZ); gGround.add(edges(slab));
   slab.userData.ceil = 'ground';
-  xreg(plinth, walls, slab);
+  xreg(plinth, ...walls, slab);
   /* entrance: door 1.10x2.10 + step + canopy */
   const entryDoor = makeDoor();
   mainDoorLeaf = entryDoor.userData.leaf;
@@ -903,10 +920,10 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
 
 /* ---------- first floor (unit B) ---------- */
 (function(){
-  const walls = box(BW, F1TOP-S1, BD, PLASTER); walls.position.set(B_CX, (S1+F1TOP)/2, B_CZ); gF1.add(edges(walls));
+  const walls = hollowWalls(gF1, B_CX, B_CZ, BW, BD, S1, F1TOP, PLASTER);
   const slab = box(BW+.2, RS-F1TOP, BD+.2, BAND); slab.position.set(B_CX, (F1TOP+RS)/2, B_CZ); gF1.add(edges(slab));
   slab.userData.ceil = 'floor1';
-  xreg(walls, slab);
+  xreg(...walls, slab);
   /* front balcony: 3.4 x 1.5 slab + glass railing 1.05 + sliding door 2.00x2.10 */
   const bSlab = box(3.4, .18, 1.5, BAND); bSlab.position.set(.8, S1-.09, B_FRONT-.75); gF1.add(edges(bSlab));
   const rF = box(3.34, 1.0, .04, GLASS, .45, .2); rF.position.set(.8, S1+.5, B_FRONT-1.48); gF1.add(rF);
@@ -956,7 +973,7 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
     const cop = box(.26, .07, BD+.34, BAND); cop.position.set(cx, PAR+.035, B_CZ); gRoof.add(cop);
   });
   /* roof room (G1) at the rear-west, ~36 m^2, storey 2.80 */
-  const rr = box(RR_W, RR_TOP-RS, RR_D, PLASTER); rr.position.set(RR_CX, (RS+RR_TOP)/2, RR_CZ); gRoof.add(edges(rr));
+  const rr = hollowWalls(gRoof, RR_CX, RR_CZ, RR_W, RR_D, RS, RR_TOP, PLASTER);
   const rrRoof = box(RR_W+.24, .14, RR_D+.24, BAND); rrRoof.position.set(RR_CX, RR_TOP+.07, RR_CZ); gRoof.add(edges(rrRoof));
   rrRoof.userData.ceil = 'roof';
   /* roof-room openings: terrace door 0.90x2.10 + windows */
@@ -981,7 +998,7 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
   gRoof.add(tank);
   const panel = box(1.7,.07,2.1,0x27415f,1,.3);
   panel.rotation.x = -.5; panel.position.set(-2.2, RR_TOP+.62, RR_CZ+1.1); gRoof.add(edges(panel));
-  xreg(terr, pF, pR, pE, pW, rr, rrRoof);
+  xreg(terr, pF, pR, pE, pW, ...rr, rrRoof);
 })();
 
 /* ---------- basements (~197 m^2 each) with parked cars ---------- */
@@ -2279,7 +2296,7 @@ function setPlan(on, level){
     if(level) planLevel = level;
   }
   planMode = on;
-  setXray(on);   /* shells go translucent so the plan reads from above */
+  setXray(false);   /* walls stay SOLID in plan view — only the level's ceiling is hidden */
   document.getElementById('explode').value = 0;
   explodeTargets.forEach(t=> t.g.position.y = 0);
   document.getElementById('planBar').style.display = on ? 'flex' : 'none';
