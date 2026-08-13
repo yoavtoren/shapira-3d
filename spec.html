@@ -48,12 +48,23 @@
     margin-top:40px; padding:14px 16px; background:var(--panel2);
     border:1px solid var(--line); border-radius:12px; font-size:12.5px; color:var(--muted);
   }
+  @media (max-width:640px){
+    header{height:auto; flex-wrap:wrap; padding:8px 12px; gap:8px;}
+    header h1{font-size:14.5px; width:100%;}
+    header .sub{display:none;}
+    .backbtn{margin-inline-start:0; font-size:12px; padding:6px 12px;}
+    main{padding:20px 14px 60px;}
+    h2{font-size:16px;}
+    table{font-size:12.5px;}
+    th,td{padding:6px 8px;}
+  }
 </style>
 </head>
 <body>
 <header>
   <h1>מפרט טכני — מידות ותקנים</h1>
   <span class="sub">חובות הלבבות 10–12 · גוש 6971 מגרש 2056</span>
+  <a class="backbtn" href="report.html">📑 דוח זכויות ותכנון</a>
   <a class="backbtn" href="index.html">→ חזרה להדמיה</a>
 </header>
 <main>

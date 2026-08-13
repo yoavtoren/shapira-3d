@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>חובות הלבבות 10–12 · הדמיה תלת-ממדית</title>
 <style>
   :root{
@@ -15,9 +15,10 @@
   body{
     font-family:-apple-system, "Segoe UI", "Heebo", Arial, sans-serif;
     background:var(--bg); color:var(--text); overflow:hidden;
+    height:100dvh; display:flex; flex-direction:column;
   }
   header{
-    height:58px; display:flex; align-items:center; gap:14px; padding:0 18px;
+    flex:0 0 auto; min-height:58px; display:flex; align-items:center; gap:14px; padding:0 18px;
     background:var(--panel); border-bottom:1px solid var(--line);
   }
   header h1{font-size:17px; font-weight:700;}
@@ -32,7 +33,7 @@
     font-size:12px; color:var(--gold);
     border:1px solid var(--gold); border-radius:999px; padding:4px 12px; white-space:nowrap;
   }
-  #app{display:flex; height:calc(100% - 58px);}
+  #app{display:flex; flex:1; min-height:0;}
   #viewport{flex:1; position:relative; min-width:0;}
   #canvas3d{position:absolute; inset:0;}
   #hud{
@@ -89,10 +90,56 @@
   .pA{background:rgba(46,196,166,.15); color:var(--unitA); border:1px solid var(--unitA);}
   .pB{background:rgba(91,141,239,.15); color:var(--unitB); border:1px solid var(--unitB);}
   .pR{background:rgba(201,139,240,.15); color:var(--roof); border:1px solid var(--roof);}
+  /* ---------- floating action buttons ---------- */
+  #fabs{
+    position:absolute; top:14px; inset-inline-end:14px; display:flex; flex-direction:column;
+    align-items:flex-end; gap:8px; z-index:8;
+  }
+  .fab{
+    display:flex; align-items:center; gap:7px; white-space:nowrap;
+    background:rgba(23,30,46,.92); border:1px solid var(--line); color:var(--text);
+    border-radius:999px; padding:9px 15px; font-size:12.5px; font-weight:600; font-family:inherit;
+    cursor:pointer; text-decoration:none; backdrop-filter:blur(6px);
+    transition:border-color .15s, color .15s, transform .15s;
+  }
+  .fab:hover{border-color:var(--accent); color:var(--accent); transform:translateY(-1px);}
+  .fab.gold{background:var(--gold); color:#0f1420; border-color:var(--gold);}
+  .fab.gold:hover{filter:brightness(1.08); color:#0f1420;}
+  .fab.on{border-color:var(--accent); color:var(--accent);}
+  body.clean header, body.clean #hud, body.clean #panel, body.clean #footerNote{display:none;}
+  #hudToggle{display:none;}
   @media (max-width:900px){
+    header{min-height:0; padding:8px 12px; gap:10px;}
+    header h1{font-size:14px; line-height:1.35; flex:1; min-width:0;}
+    header .sub, header .badge, header .spacer{display:none;}
+    .specbtn{padding:7px 12px; font-size:12px; flex:0 0 auto;}
     #app{flex-direction:column;}
-    #panel{width:100%; flex:1; border-inline-start:none; border-top:1px solid var(--line);}
-    #viewport{flex:0 0 55vh;}
+    #viewport{flex:0 0 auto; height:46vh; height:46svh;}
+    body.clean #viewport{flex:1; height:auto;}
+    #panel{width:100%; flex:1 1 auto; min-height:0; border-inline-start:none; border-top:1px solid var(--line);}
+    #tabs button{font-size:12.5px; padding:11px 4px;}
+    #tabContent{padding:14px 14px 32px;}
+    /* action buttons: compact centered row at the bottom of the 3D view */
+    #fabs{
+      top:auto; bottom:8px; inset-inline-end:0; inset-inline-start:0;
+      flex-direction:row; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px;
+      padding:0 8px; pointer-events:none;
+    }
+    .fab{pointer-events:auto; padding:7px 11px; font-size:11.5px;}
+    /* HUD collapses to a gear button; open state scrolls within the 3D view */
+    #hud{top:8px; inset-inline-start:8px; bottom:52px; pointer-events:none;}
+    #hudToggle{
+      display:block; pointer-events:auto;
+      background:rgba(23,30,46,.92); border:1px solid var(--line); color:var(--text);
+      border-radius:999px; padding:8px 13px; font-size:12.5px; font-family:inherit; cursor:pointer;
+      backdrop-filter:blur(6px); align-self:flex-start;
+    }
+    #hud .hudbox{display:none; pointer-events:auto; max-width:236px; padding:10px 12px;}
+    #hud.open{overflow-y:auto; overscroll-behavior:contain;}
+    #hud.open .hudbox{display:block;}
+    #hud .slider input{width:100px; flex:1; min-width:0;}
+    .lay{padding:5px 0;}
+    #footerNote{display:none;}
   }
 </style>
 </head>
@@ -108,7 +155,13 @@
 <div id="app">
   <div id="viewport">
     <div id="canvas3d"></div>
+    <div id="fabs">
+      <a class="fab gold" href="report.html">📑 דוח זכויות ותכנון מלא</a>
+      <button class="fab" id="fabDims">📐 הצג מידות</button>
+      <button class="fab" id="fabClean">👁 מסך נקי</button>
+    </div>
     <div id="hud">
+      <button id="hudToggle">⚙ שכבות ותצוגה</button>
       <div class="hudbox">
         <h3>שכבות</h3>
         <label class="lay"><input type="checkbox" data-layer="basement2" checked><span class="sw" style="background:#5c6b85"></span>מרתף −2 (חניה)</label>
@@ -118,6 +171,7 @@
         <label class="lay"><input type="checkbox" data-layer="roof" checked><span class="sw" style="background:var(--roof)"></span>קומת גג (ג1) · דופלקס B</label>
         <label class="lay"><input type="checkbox" data-layer="lines"><span class="sw" style="background:var(--gold)"></span>קווי מגרש וקווי בניין</label>
         <label class="lay"><input type="checkbox" data-layer="labels"><span class="sw" style="background:#e8edf7"></span>תוויות</label>
+        <label class="lay"><input type="checkbox" data-layer="dims"><span class="sw" style="background:#ffb020"></span>מידות (רוחב · עומק · גובה)</label>
         <label class="lay"><input type="checkbox" data-layer="context" checked><span class="sw" style="background:#3a4763"></span>רחוב ומבנים שכנים</label>
       </div>
       <div class="hudbox">
@@ -238,6 +292,7 @@ const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 container.appendChild(renderer.domElement);
+renderer.domElement.style.touchAction = 'none';   /* smooth touch orbit on mobile */
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -292,6 +347,8 @@ function group(name){ const g = new THREE.Group(); layers[name]=g; scene.add(g);
 const gContext = group('context');
 const gLines   = group('lines');
 const gLabels  = group('labels');
+const gDims    = group('dims');
+gDims.visible = false;
 const gB2 = group('basement2');
 const gB1 = group('basement1');
 const gGround = group('ground');
@@ -1010,6 +1067,46 @@ wlabel('מרתף −1 · חניה · ~197 מ״ר', -8.3, -1.6, 9, 1.5, '#b7c5df'
 wlabel('מרתף −2 · חניה · ~197 מ״ר', -8.3, -4.7, 9, 1.5, '#9fb0cc');
 gLabels.add(label('רחוב חובות הלבבות', -12, .9, -5.2, 1.7, '#aab6cf'));
 
+/* ================= dimension layer (רוחב · עומק · גובה) ================= */
+function dimLine(a, b, txt, color=0xffb020, tcol='#ffd166', ts=1.55){
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+  const mat = new THREE.LineBasicMaterial({color});
+  gDims.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([va,vb]), mat));
+  const vertical = Math.abs(va.y - vb.y) > .01;
+  [va,vb].forEach(v=>{
+    const t1 = v.clone(), t2 = v.clone();
+    if(vertical){ t1.x += .3; t2.x -= .3; } else { t1.y += .3; t2.y -= .3; }
+    gDims.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([t1,t2]), mat));
+  });
+  const mid = va.clone().add(vb).multiplyScalar(.5);
+  gDims.add(label(txt, mid.x, mid.y + .6, mid.z, ts, tcol));
+}
+(function(){
+  let a,b,p;
+  /* plot */
+  a=L2W(-PLOT_W/2,-1.7); b=L2W(PLOT_W/2,-1.7);
+  dimLine([a[0],.25,a[1]],[b[0],.25,b[1]],'רוחב מגרש 12.70 מ׳');
+  a=L2W(-PLOT_W/2-1.2,0); b=L2W(-PLOT_W/2-1.2,PLOT_D);
+  dimLine([a[0],.25,a[1]],[b[0],.25,b[1]],'עומק מגרש 19.40 מ׳');
+  /* building footprint */
+  a=L2W(-BW/2,B_FRONT-.9); b=L2W(BW/2,B_FRONT-.9);
+  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'רוחב בניין 8.20 מ׳',0x2ec4a6,'#7fe7d2');
+  a=L2W(-BW/2-.9,B_FRONT); b=L2W(-BW/2-.9,B_FRONT+BD);
+  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'עומק בניין 9.60 מ׳',0x2ec4a6,'#7fe7d2');
+  /* setbacks */
+  a=L2W(4.9,0); b=L2W(4.9,B_FRONT);
+  dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'קו בניין קדמי 3.00 מ׳',0xff6b6b,'#ff9a9a',1.35);
+  a=L2W(0,B_FRONT+BD); b=L2W(0,PLOT_D);
+  dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'מרווח אחורי 6.80 מ׳ (מינ׳ 5)',0xff6b6b,'#ff9a9a',1.35);
+  /* heights */
+  p=L2W(-BW/2-.7,B_FRONT-.7);
+  dimLine([p[0],0,p[1]],[p[0],PAR,p[1]],'גובה מעקה 7.95 מ׳ (מותר 8.8)',0x93a0b8,'#c6d0e2',1.45);
+  p=L2W(RR_CX-RR_W/2-.8,RR_CZ);
+  dimLine([p[0],RS,p[1]],[p[0],RR_TOP,p[1]],'חדר גג עד 9.65 מ׳',0xc98bf0,'#e2c2f7',1.35);
+  p=L2W(BW/2+.7,B_FRONT+BD+.7);
+  dimLine([p[0],GF0,p[1]],[p[0],S1,p[1]],'קומה טיפוסית 3.35 מ׳',0x93a0b8,'#c6d0e2',1.3);
+})();
+
 /* ================= explode ================= */
 const explodeTargets = [
   {g:gB2, factor:-1.6},
@@ -1029,10 +1126,29 @@ document.querySelectorAll('[data-layer]').forEach(cb=>{
   cb.addEventListener('change', ()=>{ layers[cb.dataset.layer].visible = cb.checked; });
 });
 
+/* ================= floating buttons ================= */
+const dimsCb = document.querySelector('[data-layer="dims"]');
+document.getElementById('fabDims').addEventListener('click', function(){
+  dimsCb.checked = !dimsCb.checked;
+  layers.dims.visible = dimsCb.checked;
+  this.classList.toggle('on', dimsCb.checked);
+  this.textContent = dimsCb.checked ? '📐 הסתר מידות' : '📐 הצג מידות';
+});
+document.getElementById('fabClean').addEventListener('click', function(){
+  document.body.classList.toggle('clean');
+  const on = document.body.classList.contains('clean');
+  this.classList.toggle('on', on);
+  this.textContent = on ? '👁 החזר ממשק' : '👁 מסך נקי';
+  resize();
+});
+document.getElementById('hudToggle').addEventListener('click', ()=>{
+  document.getElementById('hud').classList.toggle('open');
+});
+
 /* ================= views ================= */
 const views = {
-  iso:    {pos:[24, 17, -15], tgt:[-0.1,3.5,8]},
-  street: {pos:[2.2, 1.7, -13.5], tgt:[0.3,3.6,7]},
+  iso:    {pos:[-23, 16, -17], tgt:[-0.1,3.5,8]},
+  street: {pos:[-5.5, 1.7, -13], tgt:[0.3,3.6,7]},
   top:    {pos:[-0.1, 58, 9.01], tgt:[-0.1,0,9]},
   section:{pos:[-33, 5, 9],   tgt:[-0.1,1.5,9]},
 };
