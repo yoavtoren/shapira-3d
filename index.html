@@ -157,6 +157,7 @@
     <div id="canvas3d"></div>
     <div id="fabs">
       <a class="fab gold" href="report.html">📑 דוח זכויות ותכנון מלא</a>
+      <button class="fab" id="fabBefore">🕐 המגרש היום (לפני)</button>
       <button class="fab" id="fabDims">📐 הצג מידות</button>
       <button class="fab" id="fabClean">👁 מסך נקי</button>
     </div>
@@ -185,6 +186,19 @@
         <div class="slider" style="margin-top:10px;">
           <span>פירוק קומות</span>
           <input type="range" id="explode" min="0" max="6" step="0.1" value="0">
+        </div>
+      </div>
+      <div class="hudbox">
+        <h3>שעה ותאורה</h3>
+        <div class="slider">
+          <span>שעה <b id="todLabel" style="color:var(--gold)">12:00</b></span>
+          <input type="range" id="tod" min="5.5" max="22" step="0.1" value="12">
+        </div>
+        <div class="viewbtns" style="margin-top:9px;">
+          <button id="todNoon">☀️ יום</button>
+          <button id="todSunset">🌇 שקיעה 20:00</button>
+          <button id="todNight">🌙 לילה</button>
+          <button id="todPlay">▶︎ יממה</button>
         </div>
       </div>
     </div>
@@ -301,7 +315,8 @@ controls.maxPolarAngle = Math.PI * 0.495;
 controls.target.set(0, 4, 9);
 
 /* lights */
-scene.add(new THREE.HemisphereLight(0xeaf2fc, 0xcbbc9f, 0.95));
+const hemi = new THREE.HemisphereLight(0xeaf2fc, 0xcbbc9f, 0.95);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff1da, 1.2);
 sun.position.set(-28, 42, -22);
 sun.castShadow = true;
@@ -434,10 +449,12 @@ function alongStreet(t){
   return {x:0,z:0,ang:0};
 }
 /* window: frame + glazing + exterior sill; local outward = +z */
+const glassMeshes = [];   /* every pane, so night mode can light them up */
 function makeWindow(w, h, opts={}){
   const g = new THREE.Group();
   const frame = box(w+.14, h+.14, .10, FRAME, 1, .5); g.add(frame);
   const glass = box(w, h, .05, GLASS, .88, .25); glass.position.z = .035; g.add(glass);
+  glassMeshes.push(glass);
   /* mullion for wide windows */
   if(w > 1.5){ const mul = box(.05, h, .06, FRAME, 1, .5); mul.position.z=.03; g.add(mul); }
   if(!opts.noSill){ const sill = box(w+.24, .06, .14, BAND); sill.position.set(0, -h/2-.06, .05); g.add(sill); }
@@ -546,8 +563,13 @@ const texShelterWall = canvasTex(512, (g,s)=>{
   g.strokeStyle='rgba(96,90,78,.5)'; g.lineWidth=1.4;
   g.beginPath(); g.moveTo(s*.2,0); g.lineTo(s*.26,s*.4); g.lineTo(s*.22,s*.8); g.stroke();
   g.beginPath(); g.moveTo(s*.7,s*.1); g.lineTo(s*.66,s*.5); g.lineTo(s*.73,s); g.stroke();
-  g.lineJoin='round'; g.strokeStyle='rgba(35,40,66,.6)'; g.lineWidth=4;
-  g.font='italic 700 56px Arial'; g.strokeText('~אה', s*.55, s*.85);
+  g.lineJoin='round';
+  g.strokeStyle='rgba(35,40,66,.7)'; g.lineWidth=5;
+  g.font='italic 900 92px Arial'; g.strokeText('לילי', s*.06, s*.52);
+  g.strokeStyle='rgba(60,44,40,.55)'; g.lineWidth=4;
+  g.font='italic 700 52px Arial'; g.strokeText('אהבל', s*.52, s*.82);
+  g.strokeStyle='rgba(30,50,70,.5)'; g.lineWidth=3;
+  g.font='italic 700 40px Arial'; g.strokeText('~#!', s*.64, s*.3);
 });
 /* galvanised corrugated fence sheet */
 const texCorr = canvasTex(128, (g,s)=>{
@@ -591,11 +613,13 @@ gContext.add(flatPoly(ribbonPoly(STREET_PTS, 10.4, 23), matSand, 0.02));    /* w
   });
 })();
 const PLOT_LOCAL = [[-PLOT_W/2,0],[PLOT_W/2,0],[PLOT_W/2,PLOT_D],[-PLOT_W/2,PLOT_D]];
-gContext.add(flatPoly(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), 0x74915c, 0.04));
+const lawnMesh = flatPoly(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), 0x74915c, 0.04);
+gContext.add(lawnMesh);
 
 /* ---------- front garden: fence, gate, path, hedge (in plot local coords) ---------- */
+const gardenG = new THREE.Group();
 (function(){
-  const garden = new THREE.Group();
+  const garden = gardenG;
   garden.position.set(T.x,0,T.z); garden.rotation.y = ALPHA;
   /* low masonry fence along the frontage with a gate opening at the path */
   const fenceL = box(7.0, 1.15, .16, PLASTER2); fenceL.position.set(-2.85, .575, .08); garden.add(edges(fenceL));
@@ -759,38 +783,38 @@ function texBox(w,h,d,tex,baseColor,texFaces){
   return m;
 }
 
-/* ---------- west side: the low public shelter (miklat) right on the street ---------- */
+/* ---------- north side (screen-left from the street): the low scrawled shelter building ---------- */
 (function(){
-  /* plastered boundary wall along the plot's west line */
-  const wall = edges(box(.28, 2.4, PLOT_D, 0xe4ded0));
-  wall.position.set(-PLOT_W/2 - .15, 1.2, PLOT_D/2); nearCtx.add(wall);
-  /* the shelter: low, flat-roofed, stained plaster + scrawls */
-  const sh = texBox(6.4, 2.6, 5.4, texShelterWall, 0xefe9dc, [0,5]);
-  sh.position.set(-10.1, 1.3, 3.1); nearCtx.add(sh);
-  const lip = box(6.7, .22, 5.7, 0xe6dfd0); lip.position.set(-10.1, 2.71, 3.1); nearCtx.add(edges(lip));
-  const dr = box(1.0, 1.9, .07, 0x8c9096, 1, .6); dr.position.set(-11.6, .97, .38); nearCtx.add(dr);
-  const vent = box(.6, .4, .07, 0x7d828a, 1, .6); vent.position.set(-8.9, 1.9, .38); nearCtx.add(vent);
+  /* scrawled masonry boundary wall along the plot's north line (the "לילי" wall) */
+  const wall = texBox(.28, 2.2, PLOT_D, texShelterWall, 0xe4ded0, [1,4,5]);
+  wall.position.set(PLOT_W/2 + .15, 1.1, PLOT_D/2); nearCtx.add(wall);
+  /* the low flat-roofed building: stained plaster + graffiti scrawls */
+  const sh = texBox(6.4, 2.6, 5.4, texShelterWall, 0xefe9dc, [1,5]);
+  sh.position.set(10.1, 1.3, 3.1); nearCtx.add(sh);
+  const lip = box(6.7, .22, 5.7, 0xe6dfd0); lip.position.set(10.1, 2.71, 3.1); nearCtx.add(edges(lip));
+  const dr = box(1.0, 1.9, .07, 0x8c9096, 1, .6); dr.position.set(11.6, .97, .38); nearCtx.add(dr);
+  const vent = box(.6, .4, .07, 0x7d828a, 1, .6); vent.position.set(8.9, 1.9, .38); nearCtx.add(vent);
   const pipe = new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.9,8),
     new THREE.MeshStandardMaterial({color:0xb9bcc0, roughness:.6}));
-  pipe.position.set(-12.2, 3.15, 4.4); nearCtx.add(pipe);
-  /* corrugated fence continuing north of the shelter */
+  pipe.position.set(12.2, 3.15, 4.4); nearCtx.add(pipe);
+  /* corrugated fence continuing past it */
   const corr = texBox(3.4, 1.9, .1, texCorr, 0xc4c7c9, [4,5]);
-  corr.position.set(-15.1, .95, .45); nearCtx.add(corr);
-  /* palm rising behind the shelter, as in the photos */
+  corr.position.set(15.1, .95, .45); nearCtx.add(corr);
+  /* palm rising behind, as in the photos */
   const trunkP = new THREE.Mesh(new THREE.CylinderGeometry(.15,.22,6.2,8),
     new THREE.MeshStandardMaterial({color:0x8a7350, roughness:.95}));
-  trunkP.position.set(-9.6, 3.1, 8.0); trunkP.castShadow = true; nearCtx.add(trunkP);
+  trunkP.position.set(9.6, 3.1, 8.0); trunkP.castShadow = true; nearCtx.add(trunkP);
   for(let i=0;i<8;i++){
     const fr = box(.16,.05,2.6, 0x4c7a3e, 1, .9); fr.castShadow = false;
-    fr.position.set(-9.6 + Math.sin(i*Math.PI/4)*1.0, 6.35, 8.0 + Math.cos(i*Math.PI/4)*1.0);
+    fr.position.set(9.6 + Math.sin(i*Math.PI/4)*1.0, 6.35, 8.0 + Math.cos(i*Math.PI/4)*1.0);
     fr.rotation.order = 'YXZ'; fr.rotation.y = i*Math.PI/4; fr.rotation.x = .38;
     nearCtx.add(fr);
   }
-  /* low old house further back on the west */
+  /* low old house further back on that side */
   const h2 = edges(box(7, 3.2, 7, 0xdcd6c8));
-  h2.position.set(-11.2, 1.6, 14.5); nearCtx.add(h2);
+  h2.position.set(11.2, 1.6, 14.5); nearCtx.add(h2);
 })();
-/* ---------- east neighbour: no. 12 — two storeys, blue mural, picket fence ---------- */
+/* ---------- south side (screen-right from the street): no. 12 — two storeys, blue mural, picket fence ---------- */
 function picketRun(x0,z0,x1,z1){
   const len = Math.hypot(x1-x0, z1-z0), n = Math.round(len/.32);
   const ang = Math.atan2(x1-x0, z1-z0);
@@ -807,31 +831,31 @@ function picketRun(x0,z0,x1,z1){
 }
 (function(){
   /* ground floor */
-  const gf = box(9, 3.1, 11, 0xf1eee6); gf.position.set(11.9, 1.55, 6.0); nearCtx.add(edges(gf));
+  const gf = box(9, 3.1, 11, 0xf1eee6); gf.position.set(-11.9, 1.55, 6.0); nearCtx.add(edges(gf));
   /* first floor carrying the blue brush-stroke mural toward the plot and street */
-  const f1 = texBox(9, 3.1, 11, texMural, 0xf2efe7, [1,5]); f1.position.set(11.9, 4.65, 6.0); nearCtx.add(f1);
-  const par = box(9.24, .6, 11.24, 0xf5f2ea); par.position.set(11.9, 6.5, 6.0); nearCtx.add(edges(par));
+  const f1 = texBox(9, 3.1, 11, texMural, 0xf2efe7, [0,5]); f1.position.set(-11.9, 4.65, 6.0); nearCtx.add(f1);
+  const par = box(9.24, .6, 11.24, 0xf5f2ea); par.position.set(-11.9, 6.5, 6.0); nearCtx.add(edges(par));
   /* openings */
-  nearCtx.add(placeOn(makeWindow(1.2,1.4), 'west', 7.36, 1.75, 3.4));
-  nearCtx.add(placeOn(makeDoor(1.0,2.05,0x4a4f57), 'front', 10.2, 1.18, .44));
-  nearCtx.add(placeOn(makeWindow(1.4,1.3), 'front', 13.6, 1.85, .44));
-  nearCtx.add(placeOn(makeWindow(1.4,1.3), 'front', 10.2, 4.95, .44));
+  nearCtx.add(placeOn(makeWindow(1.2,1.4), 'east', -7.36, 1.75, 3.4));
+  nearCtx.add(placeOn(makeDoor(1.0,2.05,0x4a4f57), 'front', -10.2, 1.18, .44));
+  nearCtx.add(placeOn(makeWindow(1.4,1.3), 'front', -13.6, 1.85, .44));
+  nearCtx.add(placeOn(makeWindow(1.4,1.3), 'front', -10.2, 4.95, .44));
   /* white louvered shutter beside the upper window */
-  const shut = box(.75,1.35,.06, 0xe8ebee); shut.position.set(12.3, 4.95, .40); nearCtx.add(shut);
+  const shut = box(.75,1.35,.06, 0xe8ebee); shut.position.set(-12.3, 4.95, .40); nearCtx.add(shut);
   /* blue enamel house-number "12" on the corner facing the plot */
-  const sign = box(.05,.28,.36, 0x274b9b); sign.position.set(7.4, 2.6, 1.0); nearCtx.add(sign);
+  const sign = box(.05,.28,.36, 0x274b9b); sign.position.set(-7.4, 2.6, 1.0); nearCtx.add(sign);
   /* roof gear: solar boiler + panel */
   const tank12 = new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,1.2,12),
     new THREE.MeshStandardMaterial({color:0xdcdcdc, roughness:.4, metalness:.2}));
-  tank12.rotation.z = Math.PI/2; tank12.position.set(13.5, 7.1, 8.5); tank12.castShadow = true; nearCtx.add(tank12);
-  const pv = box(1.5,.06,1.9, 0x2b4362, 1, .35); pv.rotation.x = -.45; pv.position.set(10.5, 7.15, 8.2); nearCtx.add(pv);
+  tank12.rotation.z = Math.PI/2; tank12.position.set(-13.5, 7.1, 8.5); tank12.castShadow = true; nearCtx.add(tank12);
+  const pv = box(1.5,.06,1.9, 0x2b4362, 1, .35); pv.rotation.x = -.45; pv.position.set(-10.5, 7.15, 8.2); nearCtx.add(pv);
   /* AC units on the wall facing the plot */
   [2.0, 5.2].forEach(y=>{
-    const ac = box(.34,.6,.8, 0xe3e6e9, 1, .5); ac.position.set(7.22, y, 7.6); nearCtx.add(edges(ac));
+    const ac = box(.34,.6,.8, 0xe3e6e9, 1, .5); ac.position.set(-7.22, y, 7.6); nearCtx.add(edges(ac));
   });
   /* white picket fence: boundary with the plot + no. 12's frontage */
-  picketRun(6.55, .3, 6.55, 19.4);
-  picketRun(7.4, .3, 16.4, .3);
+  picketRun(-6.55, .3, -6.55, 19.4);
+  picketRun(-16.4, .3, -7.4, .3);
 })();
 (function(){
   const fence = box(PLOT_W, 1.9, .12, 0x3c6b4f, .95);
@@ -855,6 +879,7 @@ function stPlace(obj, t, off, y=0, extraRot=0){
   gContext.add(obj);
   return obj;
 }
+const lampHeads = [], lampLights = [];
 function utilityPole(t, off, withBox=false){
   const p = alongStreet(t);
   const g = new THREE.Group();
@@ -868,9 +893,12 @@ function utilityPole(t, off, withBox=false){
       new THREE.MeshStandardMaterial({color:0x7a6a52, roughness:.7}));
     ins.position.set(0, 8.68, dz); g.add(ins);
   });
-  /* lamp arm reaching over the roadway */
+  /* lamp arm reaching over the roadway; the head + point light join the night circuit */
   const arm = box(1.7,.07,.07, 0x9a978f); arm.position.set(.85, 7.55, 0); g.add(arm);
   const head = box(.62,.13,.24, 0x33383e, 1, .4); head.position.set(1.62, 7.5, 0); g.add(head);
+  lampHeads.push(head);
+  const pl = new THREE.PointLight(0xffb46b, 0, 22, 2);
+  pl.position.set(1.62, 7.25, 0); g.add(pl); lampLights.push(pl);
   if(withBox){
     const tb = box(.5,.8,.38, 0x84888d, 1, .55); tb.position.set(0, 6.4, .1); g.add(edges(tb));
   }
@@ -899,7 +927,7 @@ function wire(a, b, sag=1.0){
     [0,.22,.44].forEach((drop,i)=> wire([a[0],8.62-drop,a[1]], [b[0],8.62-drop,b[1]], .85+i*.12));
   });
   /* service drops: across to no. 12's roof and over the street */
-  const c12 = L2W(8.2, 1.2);
+  const c12 = L2W(-8.2, 1.2);
   wire([pB[0],8.2,pB[1]], [c12[0],6.85,c12[1]], .5);
   const p = alongStreet(.63);
   wire([pB[0],8.4,pB[1]], [p.x+Math.cos(p.ang)*10.8, 3.4, p.z-Math.sin(p.ang)*10.8], .7);
@@ -1022,10 +1050,36 @@ function makePickup(){
   stPlace(carMesh(col), t, 7.35);
 });
 /* east curb: the pickup right in front of the plot, more cars to the north */
-stPlace(makePickup(), .555, 2.95);
+const streetPickup = stPlace(makePickup(), .555, 2.95);
 [[.67,0xf0f1ef],[.745,0xb9bfc6],[.82,0xe8e9e7]].forEach(([t,col])=>{
   stPlace(carMesh(col), t, 3.0);
 });
+
+/* ================= "before": the lot as it stands today ================= */
+const gBefore = new THREE.Group();
+gBefore.position.set(T.x,0,T.z); gBefore.rotation.y = ALPHA;
+gBefore.visible = false;
+scene.add(gBefore);
+(function(){
+  /* white kurkar sand over the whole lot */
+  const sand = new THREE.Mesh(new THREE.BoxGeometry(PLOT_W-.05,.08,PLOT_D-.05), matSand);
+  sand.position.set(0,.05,PLOT_D/2); sand.receiveShadow = true; gBefore.add(sand);
+  /* frontage: corrugated sheets + dark pedestrian gate + mailboxes near no. 12 */
+  const corrA = texBox(2.7,1.85,.08, texCorr, 0xc4c7c9, [4,5]); corrA.position.set(-4.9,.93,.1); gBefore.add(corrA);
+  const gate = box(1.25,1.85,.07, 0x3a3d42, 1, .5); gate.position.set(-3.2,.93,.1); gBefore.add(gate);
+  const mailB = new THREE.Mesh(new THREE.BoxGeometry(.85,.65,.09),
+    new THREE.MeshStandardMaterial({map:texMail, roughness:.55, metalness:.25}));
+  mailB.position.set(-4.6,1.0,.17); gBefore.add(mailB);
+  const corrB = texBox(1.6,1.85,.08, texCorr, 0xc4c7c9, [4,5]); corrB.position.set(5.5,.93,.1); gBefore.add(corrB);
+  /* the L200 pickup parked inside, plus the other cars from the photos */
+  const pk = makePickup(); pk.position.set(-2.9,0,4.4); pk.rotation.y = 1.35; gBefore.add(pk);
+  [[2.6,7.6,-1.5,0xf1f2f0],[0.2,8.6,1.62,0xd9dbd8],[3.9,11.5,1.45,0xe8e9e7],[-3.4,10.8,1.7,0xaab0b6],[1.2,14.6,1.5,0xf0f0ee]].forEach(([x,z,rot,col])=>{
+    const c = carMesh(col); c.position.set(x,0,z); c.rotation.y = rot; gBefore.add(c);
+  });
+  /* junk by the scrawled wall */
+  const j1 = box(1.2,.5,.8, 0x9a8f78, 1, .9); j1.position.set(5.5,.25,3.0); gBefore.add(j1);
+  const j2 = box(.8,.9,.6, 0x7d7466, 1, .9); j2.position.set(5.8,.45,4.3); gBefore.add(j2);
+})();
 
 /* ================= regulation lines & labels (toggleable) ================= */
 function dashedLoop(pts, y, color){
@@ -1120,19 +1174,35 @@ document.getElementById('explode').addEventListener('input', e=>{
   explodeTargets.forEach(t=> t.g.position.y = t.factor * v);
 });
 
-/* ================= layer toggles ================= */
-document.querySelectorAll('[data-layer]').forEach(cb=>{
-  layers[cb.dataset.layer].visible = cb.checked;
-  cb.addEventListener('change', ()=>{ layers[cb.dataset.layer].visible = cb.checked; });
-});
+/* ================= before/after + layer logic ================= */
+let beforeMode = false;
+const HIDE_IN_BEFORE = ['basement2','basement1','ground','floor1','roof','lines','dims','labels'];
+function applyMode(){
+  document.querySelectorAll('[data-layer]').forEach(cb=>{
+    const name = cb.dataset.layer;
+    layers[name].visible = cb.checked && !(beforeMode && HIDE_IN_BEFORE.includes(name));
+  });
+  gardenG.visible = !beforeMode;
+  lawnMesh.visible = !beforeMode;
+  streetPickup.visible = !beforeMode;   /* today the pickup parks inside the lot */
+  gBefore.visible = beforeMode;
+}
+document.querySelectorAll('[data-layer]').forEach(cb=> cb.addEventListener('change', applyMode));
+applyMode();
 
 /* ================= floating buttons ================= */
 const dimsCb = document.querySelector('[data-layer="dims"]');
 document.getElementById('fabDims').addEventListener('click', function(){
   dimsCb.checked = !dimsCb.checked;
-  layers.dims.visible = dimsCb.checked;
   this.classList.toggle('on', dimsCb.checked);
   this.textContent = dimsCb.checked ? '📐 הסתר מידות' : '📐 הצג מידות';
+  applyMode();
+});
+document.getElementById('fabBefore').addEventListener('click', function(){
+  beforeMode = !beforeMode;
+  this.classList.toggle('on', beforeMode);
+  this.textContent = beforeMode ? '🏗 הצג את הבניין המוצע (אחרי)' : '🕐 המגרש היום (לפני)';
+  applyMode();
 });
 document.getElementById('fabClean').addEventListener('click', function(){
   document.body.classList.toggle('clean');
@@ -1145,10 +1215,57 @@ document.getElementById('hudToggle').addEventListener('click', ()=>{
   document.getElementById('hud').classList.toggle('open');
 });
 
+/* ================= day / night simulation (sunset at 20:00) ================= */
+const todSlider = document.getElementById('tod');
+const todLabel = document.getElementById('todLabel');
+let tod = 12, todPlaying = false;
+const clamp01 = v => Math.max(0, Math.min(1, v));
+function fmtTime(t){
+  const h = Math.floor(t), m = Math.round((t - h) * 60);
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+function updateSky(){
+  const th = Math.PI * (tod - 6) / 14;          /* sunrise 06:00 → sunset 20:00 */
+  const alt = Math.sin(th);
+  const dayF = clamp01(alt * 1.8);
+  const glow = Math.max(0, 1 - Math.abs(alt) / .22);   /* orange band near the horizon */
+  const sky = new THREE.Color(0x0b1322).lerp(new THREE.Color(0xb7d2ea), dayF)
+                                       .lerp(new THREE.Color(0xe9905a), glow * .55);
+  scene.background = sky;
+  scene.fog.color.copy(sky.clone().lerp(new THREE.Color(0xffffff), .05));
+  sun.position.set(Math.cos(th) * 42, Math.max(alt, .02) * 46 + 2, -24);
+  sun.intensity = 1.25 * clamp01(alt * 2.2);
+  sun.color.copy(new THREE.Color(0xffa95e).lerp(new THREE.Color(0xfff1da), clamp01(alt * 3)));
+  hemi.intensity = .13 + .82 * dayF;
+  /* the sun drops → street lamps and windows switch on */
+  const lampsOn = alt < .12;
+  lampLights.forEach(l => l.intensity = lampsOn ? 2.4 : 0);
+  lampHeads.forEach(h => {
+    h.material.emissive.set(lampsOn ? 0xffc37a : 0x000000);
+    h.material.emissiveIntensity = lampsOn ? 1.5 : 0;
+  });
+  glassMeshes.forEach((g,i) => {
+    const on = lampsOn && (i % 5 !== 2);        /* most windows lit, not all */
+    g.material.emissive.set(on ? 0xffd9a2 : 0x000000);
+    g.material.emissiveIntensity = on ? .9 : 0;
+  });
+  todLabel.textContent = fmtTime(tod);
+  todSlider.value = tod;
+}
+todSlider.addEventListener('input', ()=>{ tod = parseFloat(todSlider.value); todPlaying = false; updateSky(); });
+[['todNoon',12],['todSunset',20],['todNight',21.5]].forEach(([id,v])=>{
+  document.getElementById(id).addEventListener('click', ()=>{ tod = v; todPlaying = false; updateSky(); });
+});
+document.getElementById('todPlay').addEventListener('click', function(){
+  todPlaying = !todPlaying;
+  this.textContent = todPlaying ? '⏸ עצירה' : '▶︎ יממה';
+});
+updateSky();
+
 /* ================= views ================= */
 const views = {
-  iso:    {pos:[-23, 16, -17], tgt:[-0.1,3.5,8]},
-  street: {pos:[-5.5, 1.7, -13], tgt:[0.3,3.6,7]},
+  iso:    {pos:[8, 15, -23], tgt:[-0.1,3.2,8]},   /* aerial from the street: shelter left, no.12 right */
+  street: {pos:[11, 2.2, -17.5], tgt:[-0.5,3.4,6]},
   top:    {pos:[-0.1, 58, 9.01], tgt:[-0.1,0,9]},
   section:{pos:[-33, 5, 9],   tgt:[-0.1,1.5,9]},
 };
@@ -1183,6 +1300,11 @@ window.addEventListener('resize', resize);
 resize();
 (function animate(){
   requestAnimationFrame(animate);
+  if(todPlaying){
+    tod += 0.018;
+    if(tod > 22) tod = 5.5;
+    updateSky();
+  }
   controls.update();
   renderer.render(scene, camera);
 })();
