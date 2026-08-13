@@ -396,13 +396,14 @@ const STREET_PTS = [ [-34, 0], [-6, 0], [30, 6.3] ];
    GF walls 0.15-3.25, slab 3.25-3.50, F1 walls 3.50-6.60, roof slab 6.60-6.85,
    parapet to 7.95 (< 8.8 limit). Roof room (G1) 6.85-9.65.
 */
-/* floor plate 9.9 x 10.2 = ~101 m² gross: 78.7 m² main (the cap) + stair core 11.0
-   + MAMAD 11.2, both counted as SERVICE area on top of the main-area allowance.
-   The building hugs the south common wall; a 2.8m drive strip stays on the north. */
-const BW = 9.9, BD = 10.2;
-const B_FRONT = 3.0, B_CX = -1.4;    // 3m front line; south wall on the plot line
+/* floor plate 9.6 x 10.5 = ~101 m² gross: 78.5 m² main (cap 78.96) + stair core
+   + MAMAD counted as SERVICE area on top of the main-area allowance.
+   South wall on the common plot line; the north drive strip is 3.10m clear —
+   the code minimum for a single-lane ramp. Rear margin 5.90m (min 5). */
+const BW = 9.6, BD = 10.5;
+const B_FRONT = 3.0, B_CX = -1.55;   // 3m front line; south wall on the plot line
 const B_CZ = B_FRONT + BD/2;         // 8.1
-const BE = B_CX + BW/2, BWs = B_CX - BW/2;   // east/west wall lines: +3.55 / −6.35
+const BE = B_CX + BW/2, BWs = B_CX - BW/2;   // east/west wall lines: +3.25 / −6.35
 const GF0 = 0.15, GF1 = 3.25, S1 = 3.50, F1TOP = 6.60, RS = 6.85, PAR = 7.95;
 const RR_W = 6.0, RR_D = 6.6, RR_TOP = 9.65;   // roof suite ~39.6 m²
 const RR_CX = -3.2, RR_CZ = B_FRONT + BD - RR_D/2;   // rear-west block of the roof
@@ -879,7 +880,12 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
   /* separate entrance to unit B's stair core, from the north drive strip */
   gGround.add(placeOn(makeDoor(1.0,2.05,0x50565e), 'east', BE+.04, GF0+1.03, 11.0));
   const step = box(1.5, .15, .45, TILE); step.position.set(2.55, .075, B_FRONT-.28); gGround.add(step);
-  const canopy = box(1.9, .1, 1.15, BAND); canopy.position.set(2.55, 2.62, B_FRONT-.55); gGround.add(edges(canopy));
+  const canopy = box(1.5, .1, 1.15, BAND); canopy.position.set(2.5, 2.62, B_FRONT-.55); gGround.add(edges(canopy));
+  /* covered garden terrace at the rear, under unit B's balcony */
+  const terrG = box(6.0, .05, 1.25, TILE); terrG.position.set(0.3, .07, B_FRONT+BD+.65); gGround.add(terrG);
+  [[-2.4],[3.0]].forEach(([cx])=>{
+    const col = box(.15, S1, .15, PLASTER2); col.position.set(cx, S1/2, B_FRONT+BD+1.12); gGround.add(col);
+  });
   const rod1 = box(.05,.05,1.1,FRAME); rod1.position.set(1.75, 2.9, B_FRONT-.5); rod1.rotation.x=.45; gGround.add(rod1);
   const rod2 = box(.05,.05,1.1,FRAME); rod2.position.set(3.35, 2.9, B_FRONT-.5); rod2.rotation.x=.45; gGround.add(rod2);
   /* front: living-room window 2.00x1.50 (sill 0.95) + kitchen window 0.70x1.00 */
@@ -919,6 +925,14 @@ let mainDoorLeaf = null;   /* animated by the entry simulation */
   /* side windows on the drive-strip wall only — the south wall is a common wall */
   gF1.add(placeOn(makeWindow(.8,1.0), 'east', BE+.04, S1+1.1+.5, 5.4));
   gF1.add(placeOn(makeWindow(.8,1.0), 'east', BE+.04, S1+1.1+.5, 7.9));
+  /* rear open balcony over the garden — a gzuztra, not counted as main area */
+  const gbSlab = box(5.8, .18, 1.2, BAND); gbSlab.position.set(0.3, S1-.09, B_FRONT+BD+.6); gF1.add(edges(gbSlab));
+  const gbF = box(5.74, 1.0, .04, GLASS, .45, .2); gbF.position.set(0.3, S1+.5, B_FRONT+BD+1.18); gF1.add(gbF);
+  [[-2.56],[3.16]].forEach(([cx])=>{
+    const side = box(.04, 1.0, 1.12, GLASS, .45, .2); side.position.set(cx, S1+.5, B_FRONT+BD+.6); gF1.add(side);
+  });
+  const gbHr = box(5.84, .06, .06, FRAME); gbHr.position.set(0.3, S1+1.05, B_FRONT+BD+1.18); gF1.add(gbHr);
+  gF1.add(placeOn(makeDoor(1.4,2.1,0x4a5568), 'rear', 0.4, S1+1.05, B_FRONT+BD+.02));
   /* AC condensers on the drive-strip wall */
   [2.1, 5.4].forEach(y=>{
     const ac = box(.82,.62,.34,0xdfe2e6,1,.5); ac.position.set(BE+.22, y, 9.2); ac.rotation.y=Math.PI/2; gF1.add(edges(ac));
@@ -1019,12 +1033,22 @@ function furn(g, x, y, z, w, h, d, color, ry=0){
   f.position.set(x, y + h/2, z); f.rotation.y = ry; g.add(f);
   return f;
 }
-function stairsRun(g, x, z0, w, n, rise, run, y0){
+/* axis 'z': steps march along z at fixed x. axis 'x': steps march along x —
+   then the first arg is the fixed Z line and z0 is the starting X. */
+function stairsRun(g, x, z0, w, n, rise, run, y0, axis='z'){
   for(let i=0;i<n;i++){
-    const st = box(w, Math.abs(rise), run, 0xd9d3c6, 1, .85); st.castShadow = false;
-    st.position.set(x, y0 + rise*(i+.5), z0 + run*(i+.5));
+    const along = axis === 'z';
+    const st = box(along ? w : Math.abs(run), Math.abs(rise), along ? Math.abs(run) : w,
+      0xd9d3c6, 1, .85);
+    st.castShadow = false;
+    if(along) st.position.set(x, y0 + rise*(i+.5), z0 + run*(i+.5));
+    else      st.position.set(z0 + run*(i+.5), y0 + rise*(i+.5), x);
     g.add(st);
   }
+}
+function stairLanding(g, x, z, w, d, y){
+  const s = box(w, .08, d, 0xd9d3c6, 1, .85); s.castShadow = false;
+  s.position.set(x, y-.04, z); g.add(s);
 }
 function rlabel(g, x, y, z, text, size=1.0, color='#ffe9b0'){
   const s = label(text, x, y, z, size, color);
@@ -1833,14 +1857,16 @@ function dimLine(a, b, txt, color=0xffb020, tcol='#ffd166', ts=1.55){
   dimLine([a[0],.25,a[1]],[b[0],.25,b[1]],'עומק מגרש 19.40 מ׳');
   /* building footprint */
   a=L2W(BWs,B_FRONT-.9); b=L2W(BE,B_FRONT-.9);
-  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'רוחב בניין 9.90 מ׳',0x2ec4a6,'#7fe7d2');
-  a=L2W(BE+.9,B_FRONT); b=L2W(BE+.9,B_FRONT+BD);
-  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'עומק בניין 10.20 מ׳',0x2ec4a6,'#7fe7d2');
+  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'רוחב בניין 9.60 מ׳',0x2ec4a6,'#7fe7d2');
+  a=L2W(BE+.45,B_FRONT); b=L2W(BE+.45,B_FRONT+BD);
+  dimLine([a[0],1.1,a[1]],[b[0],1.1,b[1]],'עומק בניין 10.50 מ׳',0x2ec4a6,'#7fe7d2');
+  a=L2W(BE,1.4); b=L2W(PLOT_W/2,1.4);
+  dimLine([a[0],.8,a[1]],[b[0],.8,b[1]],'כניסת רכב 3.10 מ׳',0x4fc3f7,'#9fdcf7',1.2);
   /* setbacks */
   a=L2W(5.4,0); b=L2W(5.4,B_FRONT);
   dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'קו בניין קדמי 3.00 מ׳',0xff6b6b,'#ff9a9a',1.35);
   a=L2W(0,B_FRONT+BD); b=L2W(0,PLOT_D);
-  dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'מרווח אחורי 6.20 מ׳ (מינ׳ 5)',0xff6b6b,'#ff9a9a',1.35);
+  dimLine([a[0],.5,a[1]],[b[0],.5,b[1]],'מרווח אחורי 5.90 מ׳ (מינ׳ 5)',0xff6b6b,'#ff9a9a',1.35);
   /* heights */
   p=L2W(BE+.7,B_FRONT-.7);
   dimLine([p[0],0,p[1]],[p[0],PAR,p[1]],'גובה מעקה 7.95 מ׳ (מותר 8.8)',0x93a0b8,'#c6d0e2',1.45);
