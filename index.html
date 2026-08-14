@@ -187,7 +187,6 @@
     <button class="fab" id="cleanRestore">👁 החזר ממשק</button>
     <div id="planBar">
       <span class="pb-title">תכנית קומה:</span>
-      <button data-lvl="basement2">מרתף −2</button>
       <button data-lvl="basement1">מרתף −1</button>
       <button data-lvl="ground">קרקע · דירה A</button>
       <button data-lvl="floor1">קומה א׳ · דירה B</button>
@@ -207,8 +206,7 @@
       </div>
       <div class="hudbox">
         <h3>שכבות</h3>
-        <label class="lay"><input type="checkbox" data-layer="basement2" checked><span class="sw" style="background:#5c6b85"></span>מרתף −2 (חניה)</label>
-        <label class="lay"><input type="checkbox" data-layer="basement1" checked><span class="sw" style="background:#7284a3"></span>מרתף −1 (חניה + שירות)</label>
+        <label class="lay"><input type="checkbox" data-layer="basement1" checked><span class="sw" style="background:#7284a3"></span>מרתף −1 (דירה A + מחסנים + טכני)</label>
         <label class="lay"><input type="checkbox" data-layer="ground" checked><span class="sw" style="background:var(--unitA)"></span>קומת קרקע · דירה A</label>
         <label class="lay"><input type="checkbox" data-layer="floor1" checked><span class="sw" style="background:var(--unitB)"></span>קומה א׳ · דירה B</label>
         <label class="lay"><input type="checkbox" data-layer="roof" checked><span class="sw" style="background:var(--roof)"></span>קומת גג (ג1) · דופלקס B</label>
@@ -246,7 +244,7 @@
       <div class="hudbox">
         <h3>סימולציות חיות</h3>
         <div class="viewbtns">
-          <button id="simCarBtn">🚗 רכב נכנס לחניון</button>
+          <button id="simCarBtn">🚗 רכב נכנס לחניה</button>
           <button id="simWalkBtn">🚶 דייר נכנס לבניין</button>
           <button id="xrayBtn">🛋 תכנית חדרים</button>
         </div>
@@ -259,7 +257,7 @@
     <div id="tabs">
       <button class="active" data-tab="rights">דוח זכויות</button>
       <button data-tab="mix">תמהיל דירות</button>
-      <button data-tab="parking">חניה ומרתפים</button>
+      <button data-tab="parking">חניה ומרתף</button>
     </div>
     <div id="tabContent">
 
@@ -283,7 +281,7 @@
           <tr><td>שטחי שירות מעל הכניסה</td><td>עד 35% מהשטח העיקרי + ממ״דים לפי הג״א + מחסנים 9 מ״ר ליח״ד</td></tr>
           <tr><td>קווי בניין</td><td>קדמי 3 מ׳ · אחורי 5 מ׳ (עומק המגרש ~19 מ׳, מעל 18 מ׳) · צדדי — קירות משותפים וחזית אחידה</td></tr>
           <tr><td>גובה</td><td>8.8 מ׳ (2 קומות) + בניה על הגג לפי ג1</td></tr>
-          <tr><td>מרתפים (ע1)</td><td>בית משותף: 2 קומות מרתף, עד 80% מהמגרש (~197 מ״ר לקומה), גובה קומה עד 4 מ׳</td></tr>
+          <tr><td>מרתפים (ע1)</td><td>מותר: עד 2 קומות מרתף, 80% מהמגרש (~197 מ״ר לקומה), גובה עד 4 מ׳. במודל מנוצלת <b>קומה אחת</b> — למגורי עזר, מחסנים וטכני (ללא חניון)</td></tr>
         </table>
 
         <h2>פרופורציות המודל</h2>
@@ -307,8 +305,8 @@
         <table>
           <tr><th>מפלס</th><th>תכולה</th><th>שטח</th></tr>
           <tr><td>קרקע</td><td>סלון-מטבח-אוכל ~38 מ״ר, ממ״ד (עבודה), שירותי אורחים, מסדרון לגינה</td><td>~101 מ״ר ברוטו (79 עיקרי + שירות)</td></tr>
-          <tr><td>מרתף −1 (חלק)</td><td>2 חדרי שינה עם חצר אנגלית, חדר משפחה, רחצה, מחסן</td><td>~55 מ״ר</td></tr>
-          <tr><td colspan="2"><b>סה״כ ~130 מ״ר נטו · 5 חדרים + גינה ~60 מ״ר</b></td><td></td></tr>
+          <tr><td>מרתף −1 (חלק)</td><td>חדר משפחה + כושר, 2 חדרי שינה עם חצרות אנגליות, רחצה, כביסה, מחסן</td><td>~110 מ״ר</td></tr>
+          <tr><td colspan="2"><b>סה״כ ~185 מ״ר נטו · 6 חדרים + גינה ~60 מ״ר (כולל פינת חניה מחלחלת)</b></td><td></td></tr>
         </table>
 
         <h2><span class="pill pB">דירה B</span> <span class="pill pR">+ גג</span> דופלקס גג (קומה א׳ + קומת גג ג1)</h2>
@@ -324,18 +322,16 @@
 
       <!-- ============ TAB 3: PARKING ============ -->
       <div class="tabpage" id="tab-parking">
-        <h2>חניה תת-קרקעית — מותרת</h2>
+        <h2>חניה — לפי התקן, בלי חפירה</h2>
         <ul>
-          <li>לפי תכנית ע1: בבית משותף מותרות <b>2 קומות מרתף</b> בשטח עד 80% מהמגרש (~197 מ״ר לקומה) ובגובה עד 4 מ׳ — מתאים לחניה, מחסנים ושטחים טכניים.</li>
-          <li>מספר מקומות החניה מוגבל לתקן החניה התקף בעת ההיתר — המרתף לא יכול להוסיף חניות מעבר לתקן.</li>
-          <li>רחוב חובות הלבבות אינו ברשימות מדרג 1/2 של מדיניות 9158 — כניסת רכב מהרחוב אפשרית עקרונית; בחזית של ~13 מ׳ רמפה קונבנציונלית צפופה, ולרוב עדיף מתקן חניה אוטומטי/מעלית רכב (מדיניות 9024).</li>
-          <li><b>הפתרון במודל:</b> רמפה ברצועת הנסיעה הצפונית (3.10 מ׳) אל מרתף −1 — 3 מקומות בשורה דרומית (כולל <b>מקום נגיש 3.40 מ׳</b> ועמדת טעינה), ומשם <b>מעלית רכב 5.2×2.6</b> אל מרתף −2 — 4 מקומות נוספים. יציאת מילוט להולכי רגל בגרעין המשותף בשני המפלסים (דלתות אש, מטפים).</li>
+          <li>בבניין של <b>2 יח״ד</b> (4–6 נפשות) תקנון החניה 2016 (מדיניות 9072) קובע באזור זה תקן <b>מרבי</b>, לא מזערי — סדר גודל של עד <b>מקום חניה אחד ליח״ד</b>, וניתן אף לוותר על חניה. כלומר: 2 מקומות מוסדרים הם הרף.</li>
+          <li><b>הפתרון במודל: 2 חניות עיליות.</b> חניה 1 (2.5×5.0 + עמדת טעינה) ברצועת הנסיעה הצפונית — 3.10 מ׳, רוחב רכב אחד, ולכן החניה טורית; חניה 2 בפינה הצפון-מזרחית של <b>הגינה האחורית</b>, על ריצוף מחלחל. קטע הרצועה מול כניסת דיירי B נשמר פנוי לתמרון ולמעבר. בעת הצורך הרצועה קולטת רכב שלישי בטור (טנדם, לאותה יח״ד).</li>
+          <li><b>מה נחסך:</b> מעלית רכב (מדיניות 9024), רמפה וקומת מרתף −2 שלמה — חפירה, דיפון ותחזוקה בעלות של מאות אלפי ₪, עבור חניות שהתקן ממילא אינו דורש.</li>
+          <li>חניית אופניים לפי מדיניות 9010 — קשתות עגינה ליד הכניסה.</li>
         </ul>
-        <h2>מדיניות חניה עירונית</h2>
+        <h2>מרתף −1 — שטח מגורים במקום חניון</h2>
         <ul>
-          <li>תקנון חניה 2016 (מדיניות 9072): באזור זה תקן <b>מרבי</b> (לא מזערי) — סדר גודל של עד מקום חניה אחד ליח״ד; ניתן גם לוותר על חניה.</li>
-          <li>מדיניות 9130 (2020): תקני חניה מופחתים בתכניות חדשות, עידוד הסדר תת-קרקעי ותשלום לקרן חניה כחלופה.</li>
-          <li>חובת חניית אופניים לפי מדיניות 9010.</li>
+          <li>לפי תכנית ע1 מותר מרתף עד 80% מהמגרש (~197 מ״ר). במודל <b>קומת מרתף אחת</b>: הקומה התחתונה של דירה A (חדר משפחה + כושר, 2 חדרי שינה עם חצרות אנגליות, רחצה, כביסה ומחסן), גרעין מדרגות משותף, מחסן לדירה B וחדר טכני — מאגר מים ומשאבות נגר לפי תמ״א 1.</li>
         </ul>
         <p class="note">בהיתר בפועל התקן נקבע ע״י אגף התנועה לפי המצב התקף באותו מועד.</p>
       </div>
@@ -422,12 +418,11 @@ const gLines   = group('lines');
 const gLabels  = group('labels');
 const gDims    = group('dims');
 gDims.visible = false;
-const gB2 = group('basement2');
 const gB1 = group('basement1');
 const gGround = group('ground');
 const gF1 = group('floor1');
 const gRoof = group('roof');
-[gB2,gB1,gGround,gF1,gRoof].forEach(g=>{ g.position.set(T.x,0,T.z); g.rotation.y = ALPHA; });
+[gB1,gGround,gF1,gRoof].forEach(g=>{ g.position.set(T.x,0,T.z); g.rotation.y = ALPHA; });
 gLines.visible = false;   /* off by default — cleaner look; toggle in HUD */
 gLabels.visible = false;
 
@@ -1001,44 +996,14 @@ function hollowWalls(g, cx, cz, w, d, y0, y1, color, th=.25){
   xreg(terr, pF, pR, pE, pW, ...rr, rrRoof);
 })();
 
-/* ---------- basements (~197 m^2 each) with parked cars ---------- */
-const b2 = edges(box(BASE_W, BASE_H, BASE_D, 0x5c6b85, .4));
-b2.position.set(0, -BASE_H/2 - BASE_H - .4, BASE_Z); gB2.add(b2);
+/* ---------- the single basement (~197 m^2, ע1 allows up to 80% of the plot) ---------- */
 const b1 = edges(box(BASE_W, BASE_H, BASE_D, 0x7284a3, .42));
 b1.position.set(0, -BASE_H/2 - .2, BASE_Z); gB1.add(b1);
-/* cars: 2.50x4.60 marked stalls, 1.75x4.4 vehicles centered in them */
-function pcar(g, x, z, y, col, ry=0){
-  const c = new THREE.Group();
-  const body = box(1.75,.62,4.4,col,1,.5); body.position.y=.55;
-  const cab = box(1.6,.5,2.2,col,1,.4); cab.position.set(0,1.05,-.2);
-  c.add(edges(body), edges(cab));
-  c.position.set(x, y, z); c.rotation.y = ry;
-  g.add(c);
-}
-/* −1: south row, accessible stall (x≈1.45) kept free */
-pcar(gB1, -4.10, 3.15, -BASE_H-0.2, 0x8e97a8);
-pcar(gB1, -1.55, 3.15, -BASE_H-0.2, 0xb9bfca);
-/* −2: south row (middle stall left free for the arriving resident) + west stall */
-pcar(gB2, -4.10, 3.15, -BASE_H*2-0.4, 0xcdd3dc);
-pcar(gB2,  1.00, 3.15, -BASE_H*2-0.4, 0x8e97a8);
-pcar(gB2, -3.30, 10.3, -BASE_H*2-0.4, 0x9aa3b2, Math.PI/2);
-/* ramp descending in the 3.10m drive strip (lane axis x=4.8), landing at z≈7.2 */
-const ramp = new THREE.Mesh(new THREE.BoxGeometry(2.6, .22, 7.4),
-  new THREE.MeshStandardMaterial({color:0x8b96ad, roughness:.8}));
-ramp.rotation.x = Math.atan2(3.3, 6.6);
-ramp.position.set(4.8, -1.4, 3.7);
-gB1.add(ramp);
-/* raised curbs guarding both ramp edges */
-[-1.23, 1.23].forEach(dx=>{
-  const curb = box(.14, .16, 7.4, 0xcfc9bb, 1, .7); curb.castShadow = false;
-  curb.rotation.x = ramp.rotation.x;
-  curb.position.set(4.8+dx, -1.4+.16, 3.7);
-  gB1.add(curb);
-});
 
 /* ================= interiors: rooms, cores, furniture, foundations =================
    Program (matches the rights report): stacked MAMADs, stacked wet rooms,
-   common stair core + prepared lift shaft, duplex stairs, raft + piles. */
+   common stair core (no lift — 2 units, 2 storeys, none required), duplex stairs,
+   raft + piles. Walls are drawn as segments so every door sits in a REAL opening. */
 function part(g, x0, z0, x1, z1, y0, y1, th=.1, color=0xf7f4ec){
   const len = Math.hypot(x1-x0, z1-z0);
   const w = box(th, y1-y0, len, color, 1, .85);
@@ -1075,10 +1040,6 @@ function rlabel(g, x, y, z, text, size=1.0, color='#ffe9b0'){
   s.visible = false; g.add(s); roomSprites.push(s);
   return s;
 }
-function shaftSeg(g, y0, y1){
-  const s = box(1.05, y1-y0, 1.05, 0x9fc6e8, .28, .4); s.castShadow = false;
-  s.position.set(2.65, (y0+y1)/2, 9.45); g.add(edges(s));
-}
 /* stall mark centered on (x,z): side lines + closing line on the aisle (north) side */
 function stallMark(g, x, z, y, w=2.5, d=4.6){
   [[x-w/2, z, .06, d],[x+w/2, z, .06, d],[x, z+d/2, w+.06, .06]].forEach(([mx,mz,mw,md])=>{
@@ -1093,10 +1054,15 @@ const MAMAD_C = 0xcdd2d8;   /* reinforced-concrete grey */
    garden hall 1.5m · common core 2.4m. The whole front 6.85m is one open living space. */
 (function(){
   const g = gGround, f = GF0, c = GF1;
-  /* rear service band walls (band z 10.15..13.5, core x 0.85..3.25 per the 9.6x10.5 shell) */
+  /* mamad shell (band z 10.15..13.5); side wall split around the 80cm blast door */
   part(g,-6.35,10.15,-3.0,10.15,f,c,.25,MAMAD_C);  /* mamad front wall */
-  part(g,-3.0,10.15,-3.0,13.5,f,c,.25,MAMAD_C);    /* mamad side wall */
-  part(g,-2.75,10.15,0.85,10.15,f,c,.12);
+  part(g,-3.0,10.15,-3.0,11.5,f,c,.25,MAMAD_C);
+  part(g,-3.0,12.3,-3.0,13.5,f,c,.25,MAMAD_C);
+  /* band front wall with real openings: WC door · open stair slot · garden-hall door */
+  part(g,-2.75,10.15,-2.5,10.15,f,c,.12);
+  part(g,-1.7,10.15,-1.55,10.15,f,c,.12);
+  part(g,-0.35,10.15,-0.1,10.15,f,c,.12);
+  part(g,0.7,10.15,0.85,10.15,f,c,.12);
   part(g,-1.55,10.15,-1.55,13.5,f,c,.1);           /* WC / stair divider */
   part(g,-0.35,10.15,-0.35,13.5,f,c,.1);           /* stair / garden-hall divider */
   part(g,0.85,8.9,0.85,13.5,f,c,.1);               /* core west wall */
@@ -1106,99 +1072,142 @@ const MAMAD_C = 0xcdd2d8;   /* reinforced-concrete grey */
   stairsRun(g,-0.95,10.3,1.1,9,-.186,.26,f);
   stairLanding(g,-0.95,13.0,1.1,.85,f-1.674);
   stairsRun(g,13.0,-1.5,1.0,9,-.186,-.27,f-1.674,'x');
-  /* common core GF→F1: dogleg 9+9 risers x 18.6cm, entry lobby at the north,
-     shaft (lift prep) in the SE corner so the flights stay clear of it */
+  /* common core GF→F1: dogleg 9+9 risers x 18.6cm, entry lobby at the north.
+     No lift shaft — the freed SE corner takes the meter/comms closet. */
   stairsRun(g,2.65,12.25,1.1,9,.186,-.26,f);
   stairLanding(g,1.55,9.42,1.4,.95,f+1.674);
   stairsRun(g,1.45,9.9,1.1,9,.186,.26,f+1.674);
-  shaftSeg(g,f,c);
-  /* kitchen along the south common wall + island */
-  furn(g,-6.02,f,5.6,.62,.9,3.2,0xdfe3e6);
-  furn(g,-6.0,f,7.7,.65,1.85,.65,0xd7dade);        /* fridge */
-  furn(g,-4.55,f,5.6,1.5,.9,.7,0xe9e4d8);          /* island */
-  /* living + dining */
-  furn(g,2.9,f,6.5,.85,.62,2.4,0x8fa3b8);
-  furn(g,1.9,f,5.55,1.6,.62,.85,0x8fa3b8);
-  furn(g,1.7,f,6.8,.8,.34,.8,0xb9a98e);
-  furn(g,-2.9,f,8.5,1.6,.72,.9,0x9a7b52);
-  [[-3.6,7.9],[-2.2,7.9],[-3.6,9.1],[-2.2,9.1]].forEach(([cx,cz])=> furn(g,cx,f,cz,.38,.45,.38,0x7c6242));
-  furn(g,-0.3,f,3.42,1.7,.45,.32,0x4a4f57);        /* tv console */
-  /* mamad as study, guest WC fixtures */
-  furn(g,-5.45,f,12.7,1.6,.55,.9,0xb7c3d3);
-  furn(g,-6.0,f,11.0,.55,.72,1.3,0xc9b58e);
-  furn(g,-2.3,f,12.9,.4,.42,.55,0xf4f6f7);
-  furn(g,-2.3,f,10.7,.45,.8,.35,0xe8ebee);
-  /* door leaves at code widths: 80cm rooms, 70cm blast door on the mamad */
-  furn(g,-2.15,f,10.15,.8,2.05,.07,0x6b5b45);      /* guest WC door in band wall */
-  furn(g,-3.0,f,12.0,.09,2.0,.7,0x8f979e);         /* mamad blast door, side wall */
-  furn(g,0.25,f,10.15,.9,2.05,.07,0x6b5b45);       /* garden-hall door */
+  furn(g,2.65,f,9.35,1.05,2.2,.8,0x9aa0a8);        /* meter closet in the freed corner */
+  /* door leaves standing ajar in their openings */
+  furn(g,-2.1,f,10.15,.8,2.05,.06,0x6b5b45,.55);   /* guest WC */
+  furn(g,-3.0,f,11.9,.06,2.0,.8,0x8f979e,.5);      /* mamad blast door */
+  furn(g,0.3,f,10.15,.8,2.05,.06,0x6b5b45,-.5);    /* garden hall */
+  /* kitchen: one run along the west wall + island facing it, fridge at the end */
+  furn(g,-5.95,f,5.5,.62,.9,4.3,0xdfe3e6);
+  furn(g,-5.92,f,8.05,.68,1.85,.65,0xd7dade);      /* fridge */
+  furn(g,-4.5,f,5.5,.85,.9,2.2,0xe9e4d8);          /* island */
+  [[-3.9,4.8],[-3.9,5.5],[-3.9,6.2]].forEach(([cx,cz])=> furn(g,cx,f+.32,cz,.35,.42,.35,0x8b8f96)); /* stools */
+  /* dining between kitchen and living: table 180x95 + 6 chairs */
+  furn(g,-1.9,f,8.3,1.8,.74,.95,0x9a7b52);
+  [[-2.55,7.55],[-1.9,7.55],[-1.25,7.55],[-2.55,9.05],[-1.9,9.05],[-1.25,9.05]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.48,.42,0x7c6242));
+  /* living: sofa faces the TV on the front wall; the entry path along the east wall stays clear */
+  furn(g,0.9,f,6.4,2.6,.68,.95,0x8fa3b8);          /* sofa, back to the core */
+  furn(g,0.9,f,5.0,1.1,.32,.6,0xb9a98e);           /* coffee table */
+  furn(g,-0.9,f,5.5,.8,.6,.8,0x8fa3b8,.6);         /* armchair */
+  furn(g,0.9,f,3.55,1.8,.45,.35,0x4a4f57);         /* tv console on the front wall */
+  /* mamad as study: desk on the rear wall, shelves on the west */
+  furn(g,-5.1,f,12.9,1.7,.74,.6,0xb7c3d3);
+  furn(g,-5.0,f,12.25,.45,.5,.45,0x7c6242);
+  furn(g,-5.9,f,11.2,.35,1.9,1.6,0xc9b58e);
+  /* guest WC: toilet on the rear wall, basin beside the door */
+  furn(g,-2.1,f,13.15,.4,.42,.6,0xf4f6f7);
+  furn(g,-2.1,f,10.8,.45,.82,.4,0xe8ebee);
   /* labels */
   rlabel(g,-1.4,f+1.9,6.3,'סלון · פינת אוכל · מטבח ~40 מ״ר',1.2,'#9fe3d1');
   rlabel(g,-4.65,f+1.8,11.8,'ממ״ד 9 מ״ר (חדר עבודה)',1.0,'#ffc9c9');
-  rlabel(g,-2.3,f+1.55,11.8,'שירותי אורחים',0.8);
+  rlabel(g,-2.15,f+1.55,11.8,'שירותי אורחים',0.75);
   rlabel(g,-0.95,f+1.85,11.9,'מדרגות ↓ למרתף (18×18.6 ס״מ)',0.8,'#9fd3f5');
   rlabel(g,0.35,f+1.5,12.7,'מסדרון לגינה',0.7);
-  rlabel(g,2.05,f+2.1,10.9,'גרעין משותף + פיר מעלית (הכנה)',0.95,'#c5cff0');
+  rlabel(g,2.05,f+2.1,11.2,'גרעין מדרגות משותף (ללא מעלית)',0.9,'#c5cff0');
 })();
 
 /* ---------- first floor: unit B entry level (net ~75 m², 2 bedrooms + MAMAD) ---------- */
 (function(){
   const g = gF1, f = S1, c = F1TOP;
-  /* rear service band, stacked exactly over the ground floor's */
+  /* rear service band, stacked exactly over the ground floor's (stacked plumbing) */
   part(g,-6.35,10.15,-3.0,10.15,f,c,.25,MAMAD_C);
-  part(g,-3.0,10.15,-3.0,13.5,f,c,.25,MAMAD_C);
-  part(g,-2.75,10.15,0.85,10.15,f,c,.12);
-  part(g,-1.55,10.15,-1.55,13.5,f,c,.1);           /* bath over the WC — stacked plumbing */
-  part(g,-0.35,10.15,-0.35,13.5,f,c,.1);
-  part(g,0.85,8.9,0.85,13.5,f,c,.1);
+  part(g,-3.0,10.15,-3.0,11.5,f,c,.25,MAMAD_C);    /* blast-door opening in the side wall */
+  part(g,-3.0,12.3,-3.0,13.5,f,c,.25,MAMAD_C);
+  part(g,-2.75,10.15,-2.5,10.15,f,c,.12);          /* bath door opening */
+  part(g,-1.7,10.15,-1.55,10.15,f,c,.12);
+  part(g,-0.35,10.15,-0.1,10.15,f,c,.12);          /* laundry-pantry door opening */
+  part(g,0.7,10.15,0.85,10.15,f,c,.12);
+  part(g,-1.55,10.15,-1.55,13.5,f,c,.1);           /* bath / stair divider */
+  part(g,-0.35,10.15,-0.35,13.5,f,c,.1);           /* stair / pantry divider */
+  /* core west wall with the unit B entry opening (90cm) beside the band */
+  part(g,0.85,8.9,0.85,9.1,f,c,.1);
+  part(g,0.85,10.0,0.85,13.5,f,c,.1);
   part(g,0.85,8.9,3.25,8.9,f,c,.12);
-  /* two front bedrooms */
+  /* two front bedrooms — doors in real openings off the living space */
   part(g,-6.35,6.6,-0.85,6.6,f,c,.1);
-  part(g,-3.35,3.0,-3.35,6.6,f,c,.1);
-  part(g,-0.85,3.0,-0.85,6.6,f,c,.1);
+  part(g,-3.35,3.0,-3.35,5.5,f,c,.1);
+  part(g,-3.35,6.3,-3.35,6.6,f,c,.1);
+  part(g,-0.85,3.0,-0.85,5.5,f,c,.1);
+  part(g,-0.85,6.3,-0.85,6.6,f,c,.1);
   /* unit B internal stair to the roof storey: same code L (9 + landing + 9 west) */
   stairsRun(g,-0.95,10.3,1.1,9,.186,.26,f);
   stairLanding(g,-0.95,13.0,1.1,.85,f+1.674);
   stairsRun(g,13.0,-1.5,1.0,9,.186,-.27,f+1.674,'x');
-  /* bedroom doors (80cm) off the living space */
-  furn(g,-3.35,f,5.9,.09,2.05,.8,0x6b5b45);
-  furn(g,-0.85,f,5.9,.09,2.05,.8,0x6b5b45);
-  furn(g,-2.15,f,10.15,.8,2.05,.07,0x6b5b45);      /* bath door */
-  furn(g,-3.0,f,12.0,.09,2.0,.7,0x8f979e);         /* mamad blast door */
-  shaftSeg(g,f,c);
-  /* furniture */
-  furn(g,-4.85,f,5.0,1.65,.55,2.0,0xf0f0f2);       /* bedroom 1 */
-  furn(g,-4.85,f,3.85,1.75,.9,.14,0xb98f6a);
-  [[-5.75,4.1],[-3.95,4.1]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
-  furn(g,-6.0,f,5.9,.55,1.95,1.2,0xd9d4c8);
-  furn(g,-2.4,f,4.6,1.05,.5,1.95,0xf0f0f2);        /* bedroom 2 */
-  furn(g,-1.25,f,3.7,.5,.72,1.1,0xc9b58e);
-  furn(g,2.4,f,7.6,.85,.62,2.2,0xc0876a);          /* living */
-  furn(g,1.0,f,8.5,1.4,.72,.85,0x9a7b52);
-  furn(g,-0.4,f,9.8,3.0,.9,.6,0xdfe3e6);           /* kitchen run on the band wall */
-  furn(g,-2.3,f,12.9,.4,.42,.55,0xf4f6f7);
-  furn(g,-2.3,f,10.7,.45,.8,.35,0xe8ebee);
-  furn(g,-4.7,f,12.55,1.5,.55,.95,0xf0f0f2);       /* mamad as bedroom */
+  /* door leaves, ajar in their openings */
+  furn(g,0.85,f,9.55,.06,2.05,.9,0x6b5b45,.5);     /* unit entry from the core */
+  furn(g,-3.35,f,5.9,.06,2.05,.8,0x6b5b45,.5);     /* bedroom 1 */
+  furn(g,-0.85,f,5.9,.06,2.05,.8,0x6b5b45,.5);     /* bedroom 2 */
+  furn(g,-2.1,f,10.15,.8,2.05,.06,0x6b5b45,.55);   /* bath */
+  furn(g,-3.0,f,11.9,.06,2.0,.8,0x8f979e,.5);      /* mamad blast door */
+  furn(g,0.3,f,10.15,.8,2.05,.06,0x6b5b45,-.5);    /* laundry-pantry */
+  /* bedroom 1: double bed, head on the west wall, wardrobe on the partition */
+  furn(g,-5.15,f,4.55,1.9,.55,1.6,0xf0f0f2);
+  furn(g,-6.05,f,4.55,.12,.95,1.7,0xb98f6a);       /* headboard */
+  [[-5.9,3.5],[-5.9,5.6]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
+  furn(g,-4.6,f,6.25,1.8,2.0,.6,0xd9d4c8);         /* wardrobe */
+  /* bedroom 2: 140 bed, head on the shared partition */
+  furn(g,-2.5,f,4.4,1.5,.5,1.4,0xf0f0f2);
+  furn(g,-3.28,f,4.4,.1,.9,1.5,0xb98f6a);
+  furn(g,-1.15,f,3.6,.45,.5,.4,0xc9b58e);
+  furn(g,-1.6,f,6.22,1.4,2.0,.55,0xd9d4c8);        /* wardrobe */
+  /* living-kitchen: kitchen run on the east wall, dining behind the sofa,
+     sofa looking at the front balcony, TV on the bedroom partition */
+  furn(g,2.9,f,6.5,.62,.9,4.2,0xdfe3e6);           /* kitchen counter, z 4.4..8.6 */
+  furn(g,2.87,f,8.95,.68,1.85,.65,0xd7dade);       /* fridge at the band corner */
+  furn(g,1.2,f,4.6,.95,.68,2.4,0x8fa3b8,Math.PI/2);/* sofa facing the balcony */
+  furn(g,1.2,f,3.75,.6,.32,1.1,0xb9a98e);          /* coffee table */
+  furn(g,-0.72,f,4.6,.35,.45,1.6,0x4a4f57);        /* tv console on the partition */
+  furn(g,0.7,f,7.6,1.6,.74,.9,0x9a7b52);           /* dining table */
+  [[0.15,7.0],[1.25,7.0],[0.15,8.2],[1.25,8.2]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.48,.42,0x7c6242));
+  /* mamad as bedroom: bed head on the rear wall, wardrobe on the front wall */
+  furn(g,-4.7,f,12.3,1.4,.55,1.9,0xf0f0f2);
+  furn(g,-4.7,f,13.19,1.5,.9,.12,0xb98f6a);
+  [[-5.6,13.0],[-3.8,13.0]].forEach(([cx,cz])=> furn(g,cx,f,cz,.4,.5,.38,0xc9b58e));
+  furn(g,-4.7,f,10.62,1.6,1.9,.55,0xd9d4c8);
+  /* bath: shower at the rear, toilet mid, basin by the door */
+  furn(g,-2.15,f,13.1,.85,.12,.8,0xdfe8ee);
+  furn(g,-2.15,f,12.65,.85,1.9,.05,0xbcd3e0);      /* shower glass */
+  furn(g,-2.1,f,11.7,.4,.42,.6,0xf4f6f7);
+  furn(g,-2.1,f,10.75,.45,.82,.4,0xe8ebee);
+  /* laundry-pantry in the band strip */
+  furn(g,0.28,f,13.1,.6,.85,.6,0xe8ebee);          /* washer */
+  furn(g,0.28,f,12.4,.6,.85,.6,0xdfe3e6);          /* dryer */
+  furn(g,0.28,f,10.9,.6,1.7,.45,0xc9b58e);         /* shelves */
   /* labels */
-  rlabel(g,1.1,f+1.9,7.4,'סלון · מטבח ~31 מ״ר',1.15,'#a9c2f5');
+  rlabel(g,1.4,f+1.9,6.2,'סלון · מטבח ~30 מ״ר',1.1,'#a9c2f5');
   rlabel(g,-4.85,f+1.8,4.8,'חדר שינה 10.5 מ״ר',0.9,'#a9c2f5');
   rlabel(g,-2.1,f+1.8,4.8,'חדר שינה 9 מ״ר',0.85,'#a9c2f5');
   rlabel(g,-4.65,f+1.8,11.8,'ממ״ד — חדר שינה 9 מ״ר',0.9,'#ffc9c9');
-  rlabel(g,-2.3,f+1.55,11.8,'רחצה + שירותים',0.8);
+  rlabel(g,-2.15,f+1.55,11.8,'רחצה',0.75);
+  rlabel(g,0.3,f+1.5,12.0,'כביסה ומזווה',0.7);
   rlabel(g,-0.95,f+1.85,11.9,'מדרגות ↑ לגג (18×18.6 ס״מ)',0.8,'#9fd3f5');
+  rlabel(g,0.1,f+1.6,9.5,'כניסת דירה B מהגרעין',0.7,'#c5cff0');
 })();
 
 /* ---------- roof storey: parents' suite ~39.6 m² ---------- */
 (function(){
   const g = gRoof, f = RS;
-  /* en-suite bathroom at the front-west of the room */
-  part(g,-4.4,6.7,-4.4,9.0,f,f+2.5,.1);
+  /* en-suite bathroom at the front-west of the room, door in a real opening */
+  part(g,-4.4,6.7,-4.4,7.2,f,f+2.5,.1);
+  part(g,-4.4,8.0,-4.4,9.0,f,f+2.5,.1);
   part(g,-6.2,9.0,-4.4,9.0,f,f+2.5,.1);
-  furn(g,-3.3,f,11.8,1.8,.55,2.05,0xf0eef2);       /* king bed */
-  furn(g,-3.3,f,10.7,1.9,.9,.14,0xb98f6a);
-  furn(g,-5.6,f,7.4,.75,.55,1.5,0xf6f8f9);         /* freestanding tub */
-  furn(g,-4.9,f,8.55,.45,.8,.35,0xe8ebee);
-  furn(g,-6.0,f,11.6,.55,1.9,1.5,0xd9d4c8);        /* wardrobe */
+  furn(g,-4.4,f,7.6,.06,2.05,.8,0x6b5b45,.5);      /* bath door */
+  /* king bed, head on the west wall, clear of the stair opening */
+  furn(g,-5.15,f,11.5,1.9,.55,1.8,0xf0eef2);
+  furn(g,-6.08,f,11.5,.12,.95,1.9,0xb98f6a);       /* headboard */
+  [[-5.95,10.3],[-5.95,12.7]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
+  furn(g,-3.95,f,11.5,.4,.42,1.4,0xc9b58e);        /* bench at the foot */
+  furn(g,-5.0,f,13.2,2.2,1.9,.55,0xd9d4c8);        /* wardrobe on the rear wall */
+  furn(g,-5.2,f,9.35,1.5,.5,.45,0x9a7b52);         /* dresser + tv on the bath wall */
+  /* bathroom: tub on the west, toilet at the rear, basin by the door */
+  furn(g,-5.7,f,7.7,.75,.55,1.6,0xf6f8f9);
+  furn(g,-4.85,f,8.6,.4,.42,.6,0xf4f6f7);
+  furn(g,-4.85,f,7.0,.7,.82,.4,0xe8ebee);
   /* railing around the L-shaped stair opening (1.05m guard) */
   part(g,-0.35,10.2,-0.35,13.45,f,f+1.05,.05,0x6b7280);
   part(g,-1.55,10.2,-0.35,10.2,f,f+1.05,.05,0x6b7280);
@@ -1209,120 +1218,141 @@ const MAMAD_C = 0xcdd2d8;   /* reinforced-concrete grey */
   rlabel(g,1.6,f+1.5,5.3,'מרפסת גג ~55 מ״ר + פרגולה',0.95,'#ffe9b0');
 })();
 
-/* ---------- basement −1: parking (3 stalls + car lift to −2), storage, unit A bedrooms ---------- */
-let liftPlat = null;
-const LIFT = {x0:-5.35, x1:-.15, z0:6.0, z1:8.6};   /* car-lift bay, 5.2 x 2.6 */
+/* ---------- basement −1 (the only one): unit A lower level + storage + tech ----------
+   Common: stair core, unit B storeroom + tech room on the east strip.
+   Unit A: front family+gym room, hall (its L-stair lands here), storeroom,
+   laundry, and at the rear a lobby, bath and two bedrooms with english courts. */
 (function(){
   const g = gB1, f = -3.2, c = -0.4;
-  /* south row: two 2.50m stalls + one 3.40m accessible stall, all 4.60 deep */
-  stallMark(g,-4.10,3.15,f); stallMark(g,-1.55,3.15,f);
-  stallMark(g, 1.45,3.15,f,3.4);
-  const acc = box(3.3,.02,4.5, 0x2f63c9, .35); acc.castShadow = false;
-  acc.position.set(1.45, f+.032, 3.15); g.add(acc);
-  rlabel(g,1.45,f+.9,3.15,'♿',1.3,'#eaf2ff');
-  furn(g,-1.55,f,1.0,.42,.5,.16,0x3fae6a);         /* EV wallbox on the stall head wall */
-  furn(g,3.05,f,8.6,.3,.6,.3,0xb03028);            /* fire extinguisher + hose cabinet */
-  /* fire-separated common core (stacked over the floors above) + scissor stair GF→−1 */
+  /* common stair core (stacked under the floors above) + scissor stair GF→−1 */
   part(g,0.85,8.9,0.85,13.5,f,c,.12);
   part(g,0.85,8.9,3.25,8.9,f,c,.12);
-  shaftSeg(g,f,GF0);
+  part(g,3.25,8.9,3.25,10.4,f,c,.1);               /* core east wall: tech door… */
+  part(g,3.25,11.2,3.25,12.5,f,c,.1);
+  part(g,3.25,13.3,3.25,13.5,f,c,.1);              /* …and unit B storeroom door */
   stairsRun(g,2.65,12.25,1.1,9,-.186,-.26,GF0);
   stairLanding(g,1.55,9.42,1.4,.95,GF0-1.674);
   stairsRun(g,1.45,9.9,1.1,9,-.186,.26,GF0-1.674);
-  furn(g,1.45,f,8.9,.85,2.05,.08,0x8a4b3a);        /* fire door to the parking floor */
-  /* two tenant storerooms on the west band */
-  part(g,-3.6,8.9,-3.6,12.1,f,c,.1);
-  part(g,-5.5,8.9,-3.6,8.9,f,c,.1);
-  part(g,-5.5,12.1,-3.6,12.1,f,c,.1);
-  part(g,-5.5,10.5,-3.6,10.5,f,c,.08);
-  furn(g,-3.6,f,9.7,.07,2.0,.8,0x6b5b45);          /* storeroom doors, 80cm */
-  furn(g,-3.6,f,11.3,.07,2.0,.8,0x6b5b45);
-  /* car lift −1↔−2 (מדיניות 9024): platform + hazard stripes + corner posts */
-  liftPlat = box(LIFT.x1-LIFT.x0, .12, LIFT.z1-LIFT.z0, 0x9aa3ad, 1, .5);
-  liftPlat.castShadow = false;
-  liftPlat.position.set((LIFT.x0+LIFT.x1)/2, -3.26, (LIFT.z0+LIFT.z1)/2);
-  g.add(edges(liftPlat));
-  [-(LIFT.x1-LIFT.x0)/2+.14, (LIFT.x1-LIFT.x0)/2-.14].forEach(px=>{
-    const stripe = box(.16, .03, LIFT.z1-LIFT.z0-.1, 0xe8c33a, 1, .6);
-    stripe.castShadow = false; stripe.position.set(px, .075, 0);
-    liftPlat.add(stripe);   /* child of the platform so it rides along */
-  });
-  [[LIFT.x0+.06,LIFT.z0+.06],[LIFT.x0+.06,LIFT.z1-.06],[LIFT.x1-.06,LIFT.z0+.06],[LIFT.x1-.06,LIFT.z1-.06]].forEach(([px,pz])=>{
-    const post = box(.12, 2.7, .12, 0x4a4f57, 1, .5); post.castShadow = false;
-    post.position.set(px, f+1.35, pz); g.add(post);
-  });
-  /* dwelling part of unit A */
-  part(g,-5.5,13.5,5.5,13.5,f,c,.12);
-  part(g,-1.4,13.5,-1.4,18.7,f,c,.1);
-  part(g,2.1,13.5,2.1,18.7,f,c,.1);
-  furn(g,-0.3,f,13.5,.8,2.05,.09,0x6b5b45);        /* dwelling entry door */
-  furn(g,-3.6,f,16.2,1.65,.55,2.0,0xf0f0f2);
-  furn(g,3.8,f,16.2,1.4,.55,1.9,0xf0f0f2);
-  furn(g,0.3,f,16.5,.85,.6,2.0,0x8fa3b8);
-  /* english courts bring light to the bedrooms (grates on the lawn above) */
-  rlabel(g,-1.3,f+1.6,4.7,'חניה −1 · 3 מקומות · נגיש + טעינה',1.0,'#b7c5df');
-  rlabel(g,-2.75,f+1.75,7.3,'מעלית רכב ↓ ל־−2 (מדיניות 9024)',0.95,'#ffd9a0');
-  rlabel(g,-4.55,f+1.5,10.5,'2 מחסנים דירתיים',0.85,'#b7c5df');
-  rlabel(g,0.3,f+1.7,16.3,'דירה A: 2 ח. שינה + משפחה + רחצה',1.0,'#7fe7d2');
-  rlabel(g,-4.9,f+1.4,16.8,'חצר אנגלית ← אור טבעי',0.8,'#9fd3f5');
-})();
-
-/* ---------- basement −2: parking (4 stalls), egress core, tech, foundations ---------- */
-(function(){
-  const g = gB2, f = -6.4, c = -3.6;
-  /* south row (middle stall welcomes the car off the lift) + west side stall */
-  stallMark(g,-4.10,3.15,f); stallMark(g,-1.55,3.15,f); stallMark(g,1.00,3.15,f);
-  [[  -3.3, 9.05],[-3.3, 11.55]].forEach(([mx,mz])=>{
-    const m = box(4.5,.02,.06, 0xf2f3ee, 1, .9); m.castShadow = false;
-    m.position.set(mx, f+.04, mz); g.add(m);
-  });
-  const wCross = box(.06,.02,2.56, 0xf2f3ee, 1, .9); wCross.castShadow = false;
-  wCross.position.set(-1.05, f+.04, 10.3); g.add(wCross);
-  /* egress: the common scissor stair continues to −2 + shaft pit (18 x 17.8cm risers) */
-  part(g,0.85,8.9,0.85,13.5,f,c,.12);
-  part(g,0.85,8.9,3.25,8.9,f,c,.12);
-  shaftSeg(g,f,-3.2);
-  stairsRun(g,2.65,12.25,1.1,9,-.178,-.26,-3.2);
-  stairLanding(g,1.55,9.42,1.4,.95,-4.802);
-  stairsRun(g,1.45,9.9,1.1,9,-.178,.26,-4.802);
-  furn(g,1.45,f,8.9,.85,2.05,.08,0x8a4b3a);        /* fire door */
-  furn(g,3.05,f,8.6,.3,.6,.3,0xb03028);            /* fire extinguisher cabinet */
-  /* car-lift shaft posts at −2 */
-  [[LIFT.x0+.06,LIFT.z0+.06],[LIFT.x0+.06,LIFT.z1-.06],[LIFT.x1-.06,LIFT.z0+.06],[LIFT.x1-.06,LIFT.z1-.06]].forEach(([px,pz])=>{
-    const post = box(.12, 2.7, .12, 0x4a4f57, 1, .5); post.castShadow = false;
-    post.position.set(px, f+1.35, pz); g.add(post);
-  });
-  part(g,-5.5,15,5.5,15,f,c,.12);
-  const wt = new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,1.6,16),
+  /* east strip (under the drive strip): tech room + unit B storeroom */
+  part(g,3.25,11.3,5.5,11.3,f,c,.1);
+  furn(g,3.25,f,10.8,.06,2.0,.8,0x8a4b3a,.5);      /* tech door */
+  furn(g,3.25,f,12.9,.06,2.0,.8,0x6b5b45,.5);      /* storeroom B door */
+  const wt = new THREE.Mesh(new THREE.CylinderGeometry(.75,.75,1.5,16),
     new THREE.MeshStandardMaterial({color:0x9fb6c4, roughness:.5}));
-  wt.position.set(-3, f+.8, 16.8); g.add(wt);
-  furn(g,1.5,f,16.5,1.2,1.1,.8,0x8a9096);          /* pumps */
-  furn(g,3.6,f,16.5,.9,1.6,.6,0x767c83);           /* electrical panel */
-  rlabel(g,-1.3,f+1.6,4.7,'חניה −2 · 4 מקומות',1.0,'#9fb0cc');
-  rlabel(g,-2.75,f+1.75,7.3,'מעלית רכב ↑ ל־−1 · יציאת מילוט בגרעין',0.9,'#ffd9a0');
-  rlabel(g,0,f+1.7,16.6,'טכני: מאגר מים + משאבות נגר (תמ״א 1)',0.95,'#9fb0cc');
+  wt.position.set(4.3, f+.75, 9.7); g.add(wt);     /* water reservoir */
+  furn(g,5.0,f,10.7,.8,1.0,.7,0x8a9096);           /* runoff pumps (TMA 1) */
+  furn(g,5.35,f,9.3,.25,1.5,.8,0x767c83);          /* electrical panel */
+  furn(g,5.15,f,12.4,.55,1.8,1.9,0xc9b58e);        /* storeroom B shelving */
+  furn(g,3.9,f,12.9,.45,.9,1.6,0x6b7280);          /* bikes */
+  /* unit A storeroom + laundry on the west band, doors opening to the hall */
+  part(g,-3.6,8.9,-3.6,9.5,f,c,.1);
+  part(g,-3.6,10.3,-3.6,11.0,f,c,.1);
+  part(g,-3.6,11.8,-3.6,12.1,f,c,.1);
+  part(g,-5.5,10.5,-3.6,10.5,f,c,.08);
+  part(g,-5.5,12.1,-3.6,12.1,f,c,.1);
+  furn(g,-3.6,f,9.9,.06,2.0,.8,0x6b5b45,.5);       /* storeroom A door */
+  furn(g,-3.6,f,11.4,.06,2.0,.8,0x6b5b45,.5);      /* laundry door */
+  furn(g,-5.15,f,9.5,.5,1.8,1.3,0xc9b58e);         /* shelving */
+  furn(g,-4.2,f,9.15,.8,.6,.5,0xb7995e);
+  furn(g,-5.1,f,11.0,.6,.85,.6,0xe8ebee);          /* washer */
+  furn(g,-5.1,f,11.7,.6,.85,.6,0xdfe3e6);          /* dryer */
+  furn(g,-4.1,f,10.75,.5,1.6,.4,0xc9b58e);
+  /* family + gym room across the front, door from the hall */
+  part(g,-5.5,8.9,-0.2,8.9,f,c,.1);
+  part(g,0.6,8.9,0.85,8.9,f,c,.1);
+  furn(g,0.2,f,8.9,.8,2.0,.06,0x6b5b45,.5);        /* family-room door */
+  furn(g,-3.0,f,1.25,1.8,.45,.35,0x4a4f57);        /* tv console on the front wall */
+  furn(g,-3.0,f,3.45,2.4,.65,.9,0x8fa3b8);         /* sofa */
+  furn(g,-3.0,f,2.45,1.0,.32,.55,0xb9a98e);        /* coffee table */
+  furn(g,-5.15,f,5.6,.5,.75,1.6,0x9a7b52);         /* sideboard, west wall */
+  furn(g,-0.1,f,2.0,.8,.55,1.8,0x4a4f57);          /* treadmill */
+  furn(g,0.0,f,4.3,.5,.45,1.2,0x6b7280);           /* weights bench */
+  furn(g,0.55,f,6.3,.35,1.1,1.6,0x6b7280);         /* rack on the east wall */
+  /* rear zone: lobby → bath + two bedrooms (walls split at every door) */
+  part(g,-5.5,13.5,-0.9,13.5,f,c,.12);
+  part(g,-0.1,13.5,5.5,13.5,f,c,.12);
+  part(g,-1.6,13.5,-1.6,14.2,f,c,.1);
+  part(g,-1.6,15.0,-1.6,18.7,f,c,.1);
+  part(g,0.6,13.5,0.6,14.2,f,c,.1);
+  part(g,0.6,15.0,0.6,17.0,f,c,.1);
+  part(g,-1.6,15.4,-0.3,15.4,f,c,.1);
+  part(g,0.5,15.4,0.6,15.4,f,c,.1);
+  part(g,-1.6,17.0,0.6,17.0,f,c,.1);
+  furn(g,-0.5,f,13.5,.8,2.05,.06,0x6b5b45,.5);     /* lobby door from the hall */
+  furn(g,-1.6,f,14.6,.06,2.0,.8,0x6b5b45,.5);      /* bedroom 3 door */
+  furn(g,0.6,f,14.6,.06,2.0,.8,0x6b5b45,-.5);      /* bedroom 4 door */
+  furn(g,0.1,f,15.4,.8,2.0,.06,0x6b5b45,.5);       /* bath door */
+  /* bath: shower NE, toilet NW, basin by the door */
+  furn(g,0.1,f,16.5,.9,.12,.85,0xdfe8ee);
+  furn(g,0.1,f,16.06,.9,1.9,.05,0xbcd3e0);
+  furn(g,-1.15,f,16.5,.4,.42,.6,0xf4f6f7);
+  furn(g,-1.2,f,15.75,.45,.82,.4,0xe8ebee);
+  /* bedroom 3 (west): bed head on the rear wall, desk under the english court */
+  furn(g,-4.0,f,17.6,1.6,.55,2.0,0xf0f0f2);
+  furn(g,-4.0,f,18.56,1.7,.95,.12,0xb98f6a);
+  [[-5.1,18.35],[-2.9,18.35]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
+  furn(g,-1.9,f,16.6,.55,2.0,1.9,0xd9d4c8);        /* wardrobe */
+  furn(g,-5.2,f,14.6,.5,.74,1.4,0xb7c3d3);         /* desk */
+  furn(g,-4.65,f,14.6,.45,.5,.45,0x7c6242);
+  /* bedroom 4 (east, L-shaped): bed head on the rear wall, wardrobe in the nook */
+  furn(g,3.9,f,17.55,1.5,.55,1.9,0xf0f0f2);
+  furn(g,3.9,f,18.52,1.6,.95,.12,0xb98f6a);
+  [[3.0,18.3],[4.8,18.3]].forEach(([cx,cz])=> furn(g,cx,f,cz,.42,.5,.4,0xc9b58e));
+  furn(g,-0.5,f,18.35,2.0,2.0,.6,0xd9d4c8);        /* wardrobe nook behind the bath */
+  furn(g,5.1,f,14.6,.5,.74,1.3,0xb7c3d3);          /* desk */
+  furn(g,4.55,f,14.6,.45,.5,.45,0x7c6242);
+  /* labels */
+  rlabel(g,-2.3,f+1.7,4.8,'חדר משפחה + כושר ~40 מ״ר',1.05,'#7fe7d2');
+  rlabel(g,-1.4,f+1.6,11.0,'מבואת דירה A · מדרגות ↑ לקרקע',0.75,'#7fe7d2');
+  rlabel(g,-4.55,f+1.5,9.6,'מחסן A',0.7,'#b7c5df');
+  rlabel(g,-4.55,f+1.5,11.4,'כביסה',0.7);
+  rlabel(g,-0.5,f+1.5,16.2,'רחצה',0.7);
+  rlabel(g,-3.5,f+1.7,16.6,'חדר שינה 3 ~19 מ״ר',0.85,'#7fe7d2');
+  rlabel(g,3.0,f+1.7,16.6,'חדר שינה 4 + פינת עבודה',0.85,'#7fe7d2');
+  rlabel(g,2.05,f+1.85,10.9,'גרעין מדרגות משותף',0.8,'#c5cff0');
+  rlabel(g,4.4,f+1.6,9.9,'טכני: מאגר + משאבות (תמ״א 1)',0.7,'#9fb0cc');
+  rlabel(g,4.4,f+1.6,12.5,'מחסן B',0.7,'#b7c5df');
+  rlabel(g,-4.9,f+1.4,16.8,'חצר אנגלית ← אור טבעי',0.7,'#9fd3f5');
   /* foundations: raft + piles (sand + high water table) */
   const raft = box(11.6,.45,18.5, 0x9ba2ab, .55); raft.castShadow = false;
-  raft.position.set(0, -6.65, 9.75); g.add(edges(raft));
+  raft.position.set(0, -3.62, 9.75); g.add(edges(raft));
   [[-4,2.8],[4,2.8],[-4,7.5],[4,7.5],[-4,12],[4,12],[-4,16.5],[4,16.5]].forEach(([x,z])=>{
     const pile = new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,2.4,10),
       new THREE.MeshStandardMaterial({color:0x8d949d, roughness:.9, transparent:true, opacity:.55}));
-    pile.position.set(x, -8.1, z); g.add(pile);
+    pile.position.set(x, -5.05, z); g.add(pile);
   });
-  rlabel(g,0,-7.9,9.5,'רפסודת בטון + כלונסאות ביסוס',0.95,'#93a0b8');
+  rlabel(g,0,-4.9,9.5,'רפסודת בטון + כלונסאות ביסוס',0.95,'#93a0b8');
 })();
 
-/* english-court grates on the lawn, west side */
-[[14.9],[17.6]].forEach(([z])=>{
+/* english-court grates on the lawn: two on the west for bedroom 3, one at the
+   rear-garden edge for bedroom 4 (clear of the parking corner) */
+[[-5.95,14.9],[-5.95,17.6],[2.75,18.95]].forEach(([x,z])=>{
   const gr = box(.85,.05,1.5, 0x3c4046, 1, .6); gr.castShadow = false;
-  gr.position.set(-5.95, .09, z); gardenG.add(gr);
+  gr.position.set(x, .09, z); gardenG.add(gr);
 });
+
+/* ---------- surface parking: 2 stalls for 2 units (9072 is a MAX standard) ----------
+   The 3.10m north drive strip is one car wide → single-file parking: stall 1
+   beside the building with EV charging, stall 2 in the rear-garden corner on
+   permeable pavers. The stretch facing unit B's entry stays clear to manoeuvre.
+   Lives in gGround so the ground-floor plan reads as a site plan. */
+(function(){
+  const lane = box(2.95, .06, 19.0, 0xb9b5ac, 1, .9); lane.castShadow = false;
+  lane.position.set(4.82, .045, 9.65); gGround.add(lane);
+  const pavers = box(2.8, .05, 5.0, 0x8fa07c, 1, .95); pavers.castShadow = false;
+  pavers.position.set(4.82, .085, 16.8); gGround.add(pavers);
+  stallMark(gGround, 4.82, 6.1, .08, 2.6, 5.0);    /* stall 1 — unit B */
+  stallMark(gGround, 4.82, 16.8, .12, 2.6, 5.0);   /* stall 2 — unit A */
+  furn(gGround, 3.34, .55, 4.6, .12, .45, .35, 0x3fae6a);  /* EV wallbox on the east wall */
+  rlabel(gGround, 4.82, 1.3, 6.1, 'חניה 1 · 2.5×5.0 + טעינה', .85, '#b7e3c5');
+  rlabel(gGround, 4.82, 1.1, 11.5, 'רצועת תמרון · כניסת דיירי B', .7, '#b7c5df');
+  rlabel(gGround, 4.82, 1.3, 16.8, 'חניה 2 · פינת הגינה (מחלחלת)', .85, '#b7e3c5');
+})();
 
 /* floor plates so the top-down plans read like drawings */
 [[gGround, GF0-.012, BW-.1, BD-.1, B_CX, B_CZ, 0xefece4],
  [gF1, S1-.012, BW-.1, BD-.1, B_CX, B_CZ, 0xefece4],
- [gB1, -3.215, BASE_W-.1, BASE_D-.1, 0, BASE_Z, 0xdadde1],
- [gB2, -6.415, BASE_W-.1, BASE_D-.1, 0, BASE_Z, 0xdadde1]].forEach(([g,y,w,d,cx,cz,col])=>{
+ [gB1, -3.215, BASE_W-.1, BASE_D-.1, 0, BASE_Z, 0xdadde1]].forEach(([g,y,w,d,cx,cz,col])=>{
   const p = box(w, .03, d, col, 1, .9); p.castShadow = false;
   p.position.set(cx, y, cz); g.add(p);
 });
@@ -1863,6 +1893,14 @@ const streetPickup = stPlace(makePickup(), .522, 2.95);
 });
 /* (manhole covers live with the street details in the curbstone block above) */
 
+/* unit A's car parked in the rear-garden stall (gardenG shares the plot frame
+   and is hidden in both "before" and plan modes, which is what we want) */
+(function(){
+  const parked = carMesh(0x8e97a8);
+  parked.position.set(4.82, .1, 17.0); parked.rotation.y = .04;
+  gardenG.add(parked);
+})();
+
 /* ================= "before": the lot as it stands today ================= */
 const gBefore = new THREE.Group();
 gBefore.position.set(T.x,0,T.z); gBefore.rotation.y = ALPHA;
@@ -1925,8 +1963,7 @@ function wlabel(text, lx, y, lz, size, color){
 wlabel('קרקע · דירה A · ~101 מ״ר ברוטו', -8.6, 1.8, 7.8, 1.7, '#7fe7d2');
 wlabel('קומה א׳ · דירה B · ~101 מ״ר ברוטו', -8.6, 5.0, 7.8, 1.7, '#a9c2f5');
 wlabel('קומת גג ג1 · ~40 מ״ר', -8.6, 8.6, 10.5, 1.6, '#e2c2f7');
-wlabel('מרתף −1 · חניה · ~197 מ״ר', -8.3, -1.6, 9, 1.5, '#b7c5df');
-wlabel('מרתף −2 · חניה · ~197 מ״ר', -8.3, -4.7, 9, 1.5, '#9fb0cc');
+wlabel('מרתף −1 · דירה A + מחסנים + טכני · ~197 מ״ר', -8.3, -1.6, 9, 1.5, '#b7c5df');
 gLabels.add(label('רחוב חובות הלבבות', -12, .9, -5.2, 1.7, '#aab6cf'));
 
 /* ================= dimension layer (רוחב · עומק · גובה) ================= */
@@ -1973,7 +2010,6 @@ function dimLine(a, b, txt, color=0xffb020, tcol='#ffd166', ts=1.55){
 
 /* ================= explode ================= */
 const explodeTargets = [
-  {g:gB2, factor:-1.6},
   {g:gB1, factor:-0.8},
   {g:gGround, factor:0},
   {g:gF1, factor:0.9},
@@ -2000,7 +2036,7 @@ function setXray(on){
 }
 
 /* ================= before/after + layer logic ================= */
-const HIDE_IN_BEFORE = ['basement2','basement1','ground','floor1','roof','lines','dims','labels'];
+const HIDE_IN_BEFORE = ['basement1','ground','floor1','roof','lines','dims','labels'];
 function applyMode(){
   if(planMode) return;
   if(beforeMode && xrayOn) setXray(false);
@@ -2167,29 +2203,22 @@ function makePerson(){
   return g;
 }
 const person = makePerson(); person.visible = false; scene.add(person);
-/* car: cruise past the parked pickup → swing into the gate → down the 3.10m-strip ramp
-   (lane x=4.8, clears the east wall at x=3.25) → west along the −1 aisle → onto the
-   car lift → platform sinks to −2 → reverse off → nose into the free −2 stall.
-   Segment 15→16 is the vertical lift travel; segment 16→17 is driven in reverse. */
+/* car: cruise past the parked pickup → swing into the gate → up the 3.10m drive
+   strip (lane x=4.8, clears the east wall at x=3.25) → roll to a stop in surface
+   stall 1 beside the building, where it stays parked */
 const carPath = makePath([
   spw(.20, 5.2), spw(.34, 5.2), spw(.46, 5.2), spw(.55, 5.15), spw(.588, 5.0),
   spw(.606, 4.1), spw(.617, 2.6), spw(.6225, 1.2),
   lpw(4.8, .05, -.45), lpw(4.8, .05, .7),
-  lpw(4.8, -2.6, 6.1), lpw(4.65, -3.1, 7.0), lpw(4.1, -3.2, 7.3),
-  lpw(2.4, -3.2, 7.3), lpw(0, -3.2, 7.3), lpw(-2.75, -3.2, 7.3),
-  lpw(-2.75, -6.4, 7.3),
-  lpw(-.4, -6.4, 7.35),
-  lpw(-1.2, -6.4, 6.2), lpw(-1.55, -6.4, 4.9), lpw(-1.55, -6.4, 3.3),
+  lpw(4.82, .05, 3.2), lpw(4.82, .05, 6.0),
 ]);
-const CAR_REV_SEG = 16, CAR_LIFT_WP = 15, CAR_LIFT_BOTTOM = 16;
 /* resident: along the sidewalk → through the garden gate → front door */
 const walkPath = makePath([
   spw(.665, .95), spw(.60, .95),
   lpw(2.0, 0, -.5), lpw(2.0, 0, .6), lpw(2.35, 0, 1.9),
   lpw(2.55, 0, 2.55), lpw(2.55, .15, 3.7),
 ]);
-let sim = null, vGateOpen = 0, pedOpen = 0, doorOpen = 0, simFade = 0;
-lawnMesh.material.transparent = true;
+let sim = null, vGateOpen = 0, pedOpen = 0, doorOpen = 0;
 function startSim(type){
   if(planMode) setPlan(false);
   if(beforeMode) document.getElementById('fabBefore').click();
@@ -2206,83 +2235,51 @@ function updateSim(dt){
     const path = sim.type === 'car' ? carPath : walkPath;
     const actor = sim.type === 'car' ? simCar : person;
     if(sim.d < path.length){
-      /* a short dwell at the lift gate before the platform sinks */
-      if(sim.type === 'car' && sim.liftWait === undefined && sim.d >= path.wp[CAR_LIFT_WP]){
-        sim.liftWait = 0;
-      }
-      if(sim.type === 'car' && sim.liftWait !== undefined && sim.liftWait < 1.1){
-        sim.liftWait += dt;
-      } else {
-        const v = sim.type === 'car'
-          ? (sim.d < path.wp[4] ? 5.5
-            : (sim.d < path.wp[12] ? 2.4
-            : (sim.d < path.wp[CAR_LIFT_WP] ? 1.7
-            : (sim.d < path.wp[CAR_LIFT_BOTTOM] ? 0.8 : 1.2))))
-          : 1.5;
-        sim.d += v*dt;
-      }
+      const v = sim.type === 'car'
+        ? (sim.d < path.wp[4] ? 5.5
+          : (sim.d < path.wp[8] ? 2.4
+          : (sim.d < path.wp[10] ? 1.7 : 1.0)))
+        : 1.5;
+      sim.d += v*dt;
       const p = path.at(sim.d);
       actor.position.set(p.x, p.y, p.z);
       if(p.yaw !== null){
-        const tYaw = (sim.type === 'car' && p.seg === CAR_REV_SEG) ? p.yaw + Math.PI : p.yaw;
-        actor.rotation.y = lerpAngle(actor.rotation.y, tYaw, Math.min(1, dt*7));
+        actor.rotation.y = lerpAngle(actor.rotation.y, p.yaw, Math.min(1, dt*7));
       }
       if(sim.type === 'walk') actor.position.y = p.y + Math.abs(Math.sin(sim.d*7))*.05;
     } else sim.hold += dt;
     if(sim.type === 'walk' && sim.d > walkPath.length - .4) person.visible = false;
-    /* once the car dives underground, the whole building goes x-ray */
-    if(sim.type === 'car' && actor.position.y < -.4 && !xrayOn){ setXray(true); sim.xrayAuto = true; }
     /* cinematic camera: track the actor, then glide back to the street view */
     if(sim.hold < 1.6){
-      /* below −1 the chase cam dives underground into the translucent basement volume */
-      const deep = sim.type === 'car' && actor.position.y < -3.4;
-      const off = sim.type === 'car'
-        ? (deep ? [6.0, 2.2, -5.5]
-          : actor.position.y < -.4 ? [3.0, 7.8, -9.5] : [7.5, 5.5, -7.5])
-        : [4.2, 3.0, -4.6];
+      const off = sim.type === 'car' ? [7.5, 5.5, -7.5] : [4.2, 3.0, -4.6];
       camera.position.lerp(new THREE.Vector3(
         actor.position.x+off[0],
-        deep ? actor.position.y+off[1] : Math.max(actor.position.y+off[1], 2.2),
+        Math.max(actor.position.y+off[1], 2.2),
         actor.position.z+off[2]),
         Math.min(1, dt*2.2));
       controls.target.lerp(new THREE.Vector3(actor.position.x, actor.position.y+1.1, actor.position.z),
         Math.min(1, dt*3.5));
     } else {
-      if(sim.xrayAuto){ setXray(false); sim.xrayAuto = false; }
       camera.position.lerp(new THREE.Vector3(...views.street.pos), Math.min(1, dt*1.6));
       controls.target.lerp(new THREE.Vector3(...views.street.tgt), Math.min(1, dt*1.6));
       sim.ret += dt;
       if(sim.ret > 2.6) sim = null;
     }
   }
-  /* gates, door and the see-through ground ease toward their targets */
+  /* gates and the front door ease toward their targets */
   const wantV = sim && sim.type === 'car' && sim.d > carPath.wp[8]-7 && sim.hold < .6;
   const wantP = sim && sim.type === 'walk' && sim.d > walkPath.wp[2]-1.6 && sim.hold < .4;
   const wantD = sim && sim.type === 'walk' && sim.d > walkPath.wp[5]-1.6 && sim.hold < .4;
-  const wantF = sim && sim.type === 'car' && sim.d > carPath.wp[9]-1.5 && sim.hold < 1.4;
   vGateOpen += ((wantV?1:0) - vGateOpen)*Math.min(1, dt*2.4);
   pedOpen  += ((wantP?1:0) - pedOpen)*Math.min(1, dt*3.2);
   doorOpen += ((wantD?1:0) - doorOpen)*Math.min(1, dt*3.4);
-  simFade  += ((wantF?1:0) - simFade)*Math.min(1, dt*2.0);
   vGate.position.x = 4.95 - vGateOpen*2.95;
   pedGateH.rotation.y = -pedOpen*1.85;
   if(mainDoorLeaf) mainDoorLeaf.rotation.y = doorOpen*1.9;
-  lawnMesh.material.opacity = 1 - simFade*.85;
-  if(!planMode){
-    b1.material.opacity = .42 - simFade*.3;
-    b2.material.opacity = .4 - simFade*.28;
-  }
-  /* the car-lift platform carries the sim car between −1 and −2 */
-  if(liftPlat){
-    const target = (sim && sim.type === 'car' && sim.d > carPath.wp[CAR_LIFT_WP])
-      ? Math.min(-3.2, simCar.position.y) - .06
-      : -3.26;
-    liftPlat.position.y += (target - liftPlat.position.y) * Math.min(1, dt * (sim ? 12 : 1.6));
-  }
 }
 
 /* ================= floor-plan mode: one level at a time, straight from above ================= */
-const PLAN_Y = {basement2:-6.4, basement1:-3.2, ground:0, floor1:3.5, roof:6.85};
+const PLAN_Y = {basement1:-3.2, ground:0, floor1:3.5, roof:6.85};
 const savedPlanView = {pos:new THREE.Vector3(), tgt:new THREE.Vector3()};
 const gPlanOutline = new THREE.Group();
 gPlanOutline.add(dashedLoop(PLOT_LOCAL.map(p=>L2W(p[0],p[1])), 0, 0xffd166));
@@ -2313,7 +2310,6 @@ function setPlan(on, level){
     gardenG.visible = false; lawnMesh.visible = false;
     streetPickup.visible = false; gBefore.visible = false;
     b1.material.opacity = planLevel === 'basement1' ? .08 : .42;
-    b2.material.opacity = planLevel === 'basement2' ? .08 : .4;
     scene.traverse(o=>{ if(o.userData && o.userData.ceil) o.visible = o.userData.ceil !== planLevel; });
     roomSprites.forEach(s=> s.visible = true);
     gPlanOutline.visible = true;
@@ -2323,7 +2319,7 @@ function setPlan(on, level){
     controls.target.set(c[0], PLAN_Y[planLevel], c[1]);
     controls.update();
   } else {
-    b1.material.opacity = .42; b2.material.opacity = .4;
+    b1.material.opacity = .42;
     scene.traverse(o=>{ if(o.userData && o.userData.ceil) o.visible = true; });
     roomSprites.forEach(s=> s.visible = false);
     gPlanOutline.visible = false;
