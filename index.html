@@ -972,7 +972,7 @@ function hollowWalls(g, cx, cz, w, d, y0, y1, color, th=.25){
   [ [BE+.01], [BWs-.01] ].forEach(([cx])=>{
     const cop = box(.26, .07, BD+.34, BAND); cop.position.set(cx, PAR+.035, B_CZ); gRoof.add(cop);
   });
-  /* roof room (G1) at the rear-west, ~36 m^2, storey 2.80 */
+  /* roof room (G1) at the rear-west, ~39.6 m^2, storey 2.80 */
   const rr = hollowWalls(gRoof, RR_CX, RR_CZ, RR_W, RR_D, RS, RR_TOP, PLASTER);
   const rrRoof = box(RR_W+.24, .14, RR_D+.24, BAND); rrRoof.position.set(RR_CX, RR_TOP+.07, RR_CZ); gRoof.add(edges(rrRoof));
   rrRoof.userData.ceil = 'roof';
